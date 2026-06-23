@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #0f172a; /* Slate 900 */
+  --primary-light: #1e293b; /* Slate 800 */
+  --secondary: #ffffff;
+  --accent: #0284c7; /* Sky Blue - Matching skill.jobs brand */
+  --accent-light: #06b6d4; /* Cyan - Matching skill.jobs brand */
+  --accent-cyan: #0ea5e9;
+  --gradient: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%); /* Official brand sky-blue/cyan gradient */
+  --gradient-hover: linear-gradient(135deg, #0369a1 0%, #0891b2 100%);
+  --gradient-glow: 0 10px 40px -12px rgba(2, 132, 199, 0.35); /* Soft sky shadow */
+  --text-dark: #334155; /* Slate 700 - official font color */
+  --text-light: #ffffff;
+  --text-muted: #64748b; /* Slate 500 */
+  --bg-light: #f8fafc;
+  --bg-card: #ffffff;
+  --glass-border: 1px solid #e0f2fe; /* Soft Sky Blue border matching design */
+  --radius: 16px; /* Clean modern rounding */
+  --radius-lg: 24px;
+  --shadow: 0 10px 30px -10px rgba(2, 132, 199, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.01);
+  --shadow-hover: 0 20px 40px -12px rgba(2, 132, 199, 0.25), 0 5px 15px -5px rgba(0, 0, 0, 0.03);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #fafbfc;
+  color: var(--text-dark);
+  line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Ambient Ambient Blur Orbs in the Background */
+body::before {
+  content: '';
+  position: fixed;
+  top: -10%;
+  right: -10%;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.04) 0%, transparent 70%);
+  z-index: -2;
+  pointer-events: none;
+  filter: blur(80px);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -10%;
+  left: -10%;
+  width: 45vw;
+  height: 45vw;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.03) 0%, transparent 70%);
+  z-index: -2;
+  pointer-events: none;
+  filter: blur(80px);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: none;
+  outline: none;
+}
+
+.container {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.section {
+  padding: 6.5rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.section-title {
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 3.5rem;
+  position: relative;
+  letter-spacing: -0.03em;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 50px;
+  height: 5px;
+  background: var(--gradient);
+  margin: 0.75rem auto 0;
+  border-radius: 10px;
+}
+
+/* Premium Dynamic Glass Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem 2.2rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
+.btn-primary {
+  background: var(--gradient);
+  color: white;
+  box-shadow: var(--gradient-glow);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(124, 58, 237, 0.45);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--text-dark);
+  border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: var(--text-dark);
+  color: white;
+  border-color: var(--text-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+}
+
+.btn-white {
+  background: white;
+  color: var(--text-dark);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.btn-white:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.2);
+}
+
+/* High Fidelity Glassmorphism Cards */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: var(--glass-border);
+  border-radius: var(--radius);
+  padding: 2.2rem;
+  box-shadow: var(--shadow);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(124, 58, 237, 0.25);
+}
+
+.grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.grid-4 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+.bg-light {
+  background-color: rgba(248, 250, 252, 0.6);
+  border-top: 1px solid rgba(226, 232, 240, 0.5);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+@media (max-width: 768px) {
+  .section { padding: 4.5rem 0; }
+  .section-title { font-size: 2.2rem; margin-bottom: 2.5rem; }
+  .container { padding: 0 1.5rem; }
+}
+
+.text-gradient {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dynamic Page Spacing Layout under Floating Capsule Navbar */
+.main-content {
+  flex: 1;
+}
+
+.main-content.home-layout {
+  margin-top: 0;
+}
+
+.main-content.subpage-layout {
+  margin-top: 100px;
+}
+
+@media (max-width: 992px) {
+  .main-content.subpage-layout {
+    margin-top: 85px;
+  }
+}
