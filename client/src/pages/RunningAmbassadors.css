@@ -168,7 +168,7 @@
 /* Ambassador Directory Cards Grid */
 .ambassador-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 2rem;
 }
 
@@ -510,13 +510,36 @@
   .running-ambassadors-page {
     padding-top: 2rem;
   }
+  .uni-header-icon-box {
+    width: 68px;
+    height: 68px;
+    font-size: 2.2rem;
+  }
   .uni-header-title {
-    font-size: 2rem;
+    font-size: 1.85rem;
   }
   .mini-stat-card {
     padding: 1.25rem;
   }
+  .amb-profile-card {
+    padding: 1.35rem;
+  }
   .amb-modal-card {
-    padding: 2rem 1.5rem;
+    padding: 1.75rem 1.25rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .uni-header-title {
+    font-size: 1.55rem;
+  }
+  .uni-header-icon-box {
+    width: 56px;
+    height: 56px;
+    font-size: 1.8rem;
+  }
+  .amb-profile-card,
+  .amb-modal-card {
+    padding: 1.25rem 1rem;
   }
 }

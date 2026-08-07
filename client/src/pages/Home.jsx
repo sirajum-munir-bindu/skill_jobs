@@ -10,67 +10,6 @@ import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
 import './Home.css';
 
-// 1. Learning Path Data
-const learningPaths = {
-  web: {
-    title: "Web Engineering",
-    icon: <Code size={28} />,
-    color: "#0284c7",
-    badge: "Most Popular",
-    desc: "Become a Full-Stack developer capable of building complex, secure, and highly scalable cloud systems from scratch.",
-    duration: "16 Weeks (120 Hours)",
-    modules: [
-      "Frontend UI Development (React.js, Tailwind)",
-      "State Management (Redux Toolkit, APIs)",
-      "Backend Architecture (Node.js, Express)",
-      "Database Systems & Security (MongoDB, SQL)"
-    ],
-    tools: ["React", "Node.js", "Express", "MongoDB", "GitHub", "Tailwind"],
-    capstone: {
-      name: "SaaS Application Platform",
-      desc: "Develop a complete Multi-tenant CRM application featuring payment integrations, real-time analytics, and role-based access control."
-    }
-  },
-  ai: {
-    title: "Data Science & AI",
-    icon: <Brain size={28} />,
-    color: "#10b981",
-    badge: "High Growth",
-    desc: "Master data analytics pipelines, automated predictive modeling, and integration of generative AI models in business applications.",
-    duration: "18 Weeks (135 Hours)",
-    modules: [
-      "Data Analysis (Python, Pandas, NumPy)",
-      "Database Querying & Optimization (SQL)",
-      "Machine Learning Algorithms (Scikit-Learn)",
-      "Deep Learning & Generative AI APIs"
-    ],
-    tools: ["Python", "SQL", "Pandas", "Scikit-Learn", "PostgreSQL", "PowerBI"],
-    capstone: {
-      name: "E-Commerce Suggestion Engine",
-      desc: "Construct an automated ML pipeline that trains user behavior models and outputs real-time personalized product suggestions."
-    }
-  },
-  design: {
-    title: "UI/UX Product Design",
-    icon: <Layers size={28} />,
-    color: "#8b5cf6",
-    badge: "Creative Track",
-    desc: "Learn modern user experience methodologies, build interactive prototypes, and create design systems for high-traffic products.",
-    duration: "12 Weeks (90 Hours)",
-    modules: [
-      "User Research & Empathy Mapping",
-      "Wireframing & Information Architecture",
-      "Interactive High-Fidelity Prototyping",
-      "Usability Testing & Design System Scaling"
-    ],
-    tools: ["Figma", "FigJam", "Miro", "Adobe Suite", "Prototyping", "A/B Testing"],
-    capstone: {
-      name: "FinTech Digital Wallet App",
-      desc: "Conduct thorough user testing and design a beautiful financial product interface, building a comprehensive design system."
-    }
-  }
-};
-
 // 2. Career Fit Quiz Questions
 const quizQuestions = [
   {
@@ -232,31 +171,31 @@ const Home = () => {
     },
     infoBlocks: [
       {
-        badge: "Industry-Led Guidance",
-        title: "Learn Directly From Top Corporate Experts",
-        desc: "Our curriculum is designed and updated constantly by active tech, design, and HR executives from leading corporate companies. You learn the exact skills recruiters look for.",
+        badge: "UPCOMING FLAGSHIP EVENT",
+        title: "Join Our Next Mega Workshop & Competition",
+        desc: "Don't miss our upcoming flagship workshops, hackathons, and industry competitions. Network with active corporate mentors, participate in real-time challenges, and unlock exclusive career opportunities.",
         bullets: [
-          "Interactive live classes with corporate leaders",
-          "Real case studies from active corporate projects",
-          "Mock technical interviews and constructive feedback"
+          "Live interactive mentorship sessions with top corporate executives",
+          "Hands-on project building and live competitive track challenges",
+          "Win certificates of excellence and direct recruitment referrals"
         ],
-        btnText: "Browse Mentors",
+        btnText: "Register For Event",
         btnLink: "/events",
         image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         reverse: false
       },
       {
-        badge: "Hands-On Application",
-        title: "Build a Portfolio That Demands Recruitment",
-        desc: "Recruiters don't hire CV lists; they hire builders. With our programs, you will build actual production-ready prototypes, digital campaigns, and project pitch decks.",
+        badge: "COMPLETED SEMINARS & EVENTS",
+        title: "Relive Our Past Mega Seminars & Success Stories",
+        desc: "Explore highlights from our recently completed campus bootcamps, corporate summits, and national seminars. Witness real student transformations, project showcases, and how our alumni transitioned directly into top corporate roles.",
         bullets: [
-          "Team hackathons and cross-functional collaborations",
-          "Clean code audits and interface feedback cycles",
-          "Showcase your projects directly to recruiters in pitch days"
+          "Archived masterclass recordings and downloadable seminar slides",
+          "Alumni project highlights and live competition winners gallery",
+          "Direct placement stats and recruiter testimonials from past events"
         ],
-        btnText: "Join Live Workshop",
+        btnText: "View Completed Seminars",
         btnLink: "/events",
-        image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         reverse: true
       }
     ],
@@ -898,7 +837,6 @@ const Home = () => {
                   <div className="author-avatar">{test.avatar || test.author.charAt(0)}</div>
                   <div>
                     <h4>{test.author}</h4>
-                    <p>{test.role}</p>
                   </div>
                 </div>
               </div>
@@ -909,10 +847,10 @@ const Home = () => {
 
       {/* Call to Action: Centered Professional Banner */}
       <section className="section cta-section skills-cta text-center">
-        <div className="container">
-          <h2>{configs.cta?.title || "Ready to unlock your professional potential?"}</h2>
-          <p>{configs.cta?.desc || "Register for our upcoming certified workshops and fast-track your applications to 500+ top recruiters today."}</p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.5rem' }}>
+          <h2 style={{ marginBottom: '0' }}>{configs.cta?.title || "Ready to unlock your professional potential?"}</h2>
+          <p style={{ maxWidth: '800px', margin: '0 auto' }}>{configs.cta?.desc || "Register for our upcoming certified workshops and fast-track your applications to 500+ top recruiters today."}</p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1rem' }}>
             <Link to={configs.cta?.btn1Link || "/events"} className="btn btn-white">{configs.cta?.btn1Text || "View Upcoming Classes"} <ArrowRight size={20} className="inline-icon" /></Link>
             <Link to={configs.cta?.btn2Link || "/contact"} className="btn btn-secondary" style={{ background: 'transparent', borderColor: 'white', color: 'white' }}>{configs.cta?.btn2Text || "Contact Advisors"}</Link>
           </div>

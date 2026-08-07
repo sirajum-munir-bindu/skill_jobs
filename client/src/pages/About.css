@@ -553,23 +553,63 @@
 
 @media (max-width: 576px) {
   .about-hero .page-title {
-    font-size: 2.25rem;
+    font-size: 2rem;
   }
   .floating-badge {
-    padding: 0.6rem 1rem;
+    padding: 0.6rem 0.85rem;
+    max-width: 90%;
   }
   .floating-badge.badge-top {
-    left: 0;
-    top: 5%;
+    left: 5%;
+    top: 3%;
   }
   .floating-badge.badge-bottom {
-    right: 0;
-    bottom: 5%;
+    right: 5%;
+    bottom: 3%;
   }
   .cta-about-card {
-    padding: 3rem 2rem;
+    padding: 2.5rem 1.5rem;
   }
   .cta-about-card h2 {
-    font-size: 2rem;
+    font-size: 1.85rem;
+  }
+  .cta-buttons-wrap {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cta-buttons-wrap .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .value-card {
+    padding: 2rem 1.5rem;
+  }
+  .timeline-content {
+    padding: 1.35rem 1.15rem;
+  }
+  .timeline-item.left {
+    padding-left: 2.25rem;
+  }
+  .timeline-item.right {
+    padding-left: 2.25rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .about-hero .page-title {
+    font-size: 1.65rem;
+  }
+  .floating-badge h5 {
+    font-size: 0.78rem;
+  }
+  .floating-badge p {
+    font-size: 0.68rem;
+  }
+  .cta-about-card h2 {
+    font-size: 1.55rem;
+  }
+  .value-card,
+  .timeline-content {
+    padding: 1.25rem 1rem;
   }
 }

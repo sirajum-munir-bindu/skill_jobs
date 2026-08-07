@@ -138,7 +138,7 @@
 
 .roles-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 1.25rem;
   padding: 0;
   list-style: none;
@@ -1128,13 +1128,23 @@
 
 @media (max-width: 576px) {
   .ambassador-page .page-title {
-    font-size: 2.25rem;
+    font-size: 2rem;
   }
   .form-wrapper {
-    padding: 2.25rem 1.5rem;
+    padding: 1.85rem 1.25rem;
+  }
+  .campus-tabs-container {
+    flex-direction: column;
+    width: 100%;
+    padding: 0.75rem;
+  }
+  .campus-tab-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.8rem 1.2rem;
   }
   .campus-detail-card {
-    padding: 1.75rem 1.25rem;
+    padding: 1.5rem 1.15rem;
   }
   .campus-stats-summary-grid {
     grid-template-columns: 1fr;
@@ -1150,5 +1160,41 @@
   .campus-apply-action-btn,
   .campus-meet-action-btn {
     width: 100%;
+  }
+  .timeline-step-row {
+    flex-direction: column !important;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .timeline-node {
+    position: relative;
+    left: 0;
+    top: 0;
+    transform: none;
+    margin-bottom: 0.5rem;
+  }
+  .timeline-content-card {
+    width: 100%;
+    margin-left: 0;
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .ambassador-page .page-title {
+    font-size: 1.65rem;
+  }
+  .form-wrapper h3 {
+    font-size: 1.5rem;
+  }
+  .form-wrapper,
+  .campus-detail-card {
+    padding: 1.35rem 1rem;
+  }
+  .campus-chapter-title {
+    font-size: 1.65rem;
+  }
+  .timeline-content-card {
+    padding: 1.25rem 1rem;
   }
 }

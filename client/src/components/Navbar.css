@@ -444,3 +444,69 @@
     border: 1px solid rgba(2, 132, 199, 0.15);
   }
 }
+
+/* ==========================================================================
+   Small Mobile & Compact Devices (< 576px and < 400px)
+   ========================================================================== */
+@media (max-width: 576px) {
+  .navbar {
+    top: 10px;
+    height: 62px;
+    width: calc(100% - 20px);
+    border-radius: 50px;
+  }
+
+  .navbar.scrolled {
+    top: 6px;
+    height: 56px;
+    width: calc(100% - 12px);
+  }
+
+  .navbar-container {
+    padding: 0 1.15rem;
+  }
+
+  .navbar-logo img {
+    height: 35px;
+  }
+
+  .mobile-toggle {
+    padding: 6px;
+  }
+
+  .navbar-menu {
+    top: calc(100% + 8px);
+    padding: 1.5rem 1.15rem;
+    border-radius: 20px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+
+  .nav-link {
+    padding: 0.65rem;
+    font-size: 0.95rem;
+  }
+
+  .nav-btn {
+    padding: 0.7rem !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .navbar {
+    width: calc(100% - 12px);
+  }
+
+  .navbar-container {
+    padding: 0 0.85rem;
+  }
+
+  .navbar-logo img {
+    height: 31px;
+  }
+
+  .navbar-menu {
+    padding: 1.25rem 0.85rem;
+  }
+}

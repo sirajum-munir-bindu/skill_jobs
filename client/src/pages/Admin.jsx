@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { 
   Calendar, MapPin, Clock, Search, Plus, Edit2, Trash2, 
-  Users, Award, Lock, LogOut, Check,
-  Loader2, Mail, School, Eye, AlertCircle, Layout, GraduationCap, MessageSquare, Phone
+  Users, Award, Lock, LogOut, Check, Home as HomeIcon,
+  Loader2, Mail, School, Eye, AlertCircle, Layout, GraduationCap, MessageSquare, Phone,
+  Menu, X, Bell, ChevronRight, ChevronDown, User, Shield, Sparkles, Filter, Briefcase
 } from 'lucide-react';
 import './Admin.css';
 
@@ -20,6 +22,7 @@ const Admin = () => {
     localStorage.getItem('admin_unlocked') === 'true'
   );
   const [authError, setAuthError] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Dashboard Data States
   const [events, setEvents] = useState([]);
@@ -95,31 +98,31 @@ const Admin = () => {
     },
     infoBlocks: [
       {
-        badge: "Industry-Led Guidance",
-        title: "Learn Directly From Top Corporate Experts",
-        desc: "Our curriculum is designed and updated constantly by active tech, design, and HR executives from leading corporate companies. You learn the exact skills recruiters look for.",
+        badge: "UPCOMING FLAGSHIP EVENT",
+        title: "Join Our Next Mega Workshop & Competition",
+        desc: "Don't miss our upcoming flagship workshops, hackathons, and industry competitions. Network with active corporate mentors, participate in real-time challenges, and unlock exclusive career opportunities.",
         bullets: [
-          "Interactive live classes with corporate leaders",
-          "Real case studies from active corporate projects",
-          "Mock technical interviews and constructive feedback"
+          "Live interactive mentorship sessions with top corporate executives",
+          "Hands-on project building and live competitive track challenges",
+          "Win certificates of excellence and direct recruitment referrals"
         ],
-        btnText: "Browse Mentors",
+        btnText: "Register For Event",
         btnLink: "/events",
         image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         reverse: false
       },
       {
-        badge: "Hands-On Application",
-        title: "Build a Portfolio That Demands Recruitment",
-        desc: "Recruiters don't hire CV lists; they hire builders. With our programs, you will build actual production-ready prototypes, digital campaigns, and project pitch decks.",
+        badge: "COMPLETED SEMINARS & EVENTS",
+        title: "Relive Our Past Mega Seminars & Success Stories",
+        desc: "Explore highlights from our recently completed campus bootcamps, corporate summits, and national seminars. Witness real student transformations, project showcases, and how our alumni transitioned directly into top corporate roles.",
         bullets: [
-          "Team hackathons and cross-functional collaborations",
-          "Clean code audits and interface feedback cycles",
-          "Showcase your projects directly to recruiters in pitch days"
+          "Archived masterclass recordings and downloadable seminar slides",
+          "Alumni project highlights and live competition winners gallery",
+          "Direct placement stats and recruiter testimonials from past events"
         ],
-        btnText: "Join Live Workshop",
+        btnText: "View Completed Seminars",
         btnLink: "/events",
-        image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         reverse: true
       }
     ],
@@ -490,33 +493,6 @@ const Admin = () => {
   };
 
 
-  // Convert uploaded info block image file to Base64 string for DB storage
-  const handleInfoBlockImageFile = (index, file) => {
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Image size should be under 5MB.', 'error');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      showToast('Please upload a valid image file.', 'error');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setHomepageConfigs(prev => {
-        const updatedBlocks = [...prev.infoBlocks];
-        updatedBlocks[index] = { ...updatedBlocks[index], image: e.target.result };
-        return { ...prev, infoBlocks: updatedBlocks };
-      });
-      showToast('Block image loaded! Remember to click "Save Info Blocks" to apply.', 'success');
-    };
-    reader.onerror = () => {
-      showToast('Error reading image file.', 'error');
-    };
-    reader.readAsDataURL(file);
-  };
-
   // Convert uploaded Who We Are image file to Base64 string for DB storage
   const handleAboutWhoWeAreImageFile = (file) => {
     if (file.size > 5 * 1024 * 1024) {
@@ -795,6 +771,11 @@ const Admin = () => {
             <div style={{ marginTop: '2rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Hint: Try <strong>admin123</strong>
             </div>
+            <div style={{ marginTop: '1.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem', textAlign: 'center' }}>
+              <Link to="/" className="btn btn-secondary w-100" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.7rem' }}>
+                <HomeIcon size={16} /> Go to Homepage
+              </Link>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -803,7 +784,7 @@ const Admin = () => {
 
   // 2. Unlocked Full Dashboard Screen
   return (
-    <div className="admin-page">
+    <div className="admin-saas-layout">
       {/* Toast popup alerts */}
       {toast.show && (
         <div className={`toast-msg ${toast.type || 'success'}`}>
@@ -812,162 +793,327 @@ const Admin = () => {
         </div>
       )}
 
-      {/* Header section */}
-      <section className="admin-header">
-        <div className="container">
-          <div className="admin-header-flex">
-            <div>
-              <span className="admin-badge">Admin Dashboard</span>
-              <h1>Skill Jobs <span className="text-gradient">Control Panel</span></h1>
+      {/* Mobile Drawer Backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setSidebarOpen(false)} 
+        />
+      )}
+
+      {/* FIXED LEFT SIDEBAR */}
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        {/* Top: Brand Logo + Badge */}
+        <div className="sidebar-brand-section">
+          <div className="sidebar-brand-flex">
+            <div className="sidebar-logo-icon">
+              <Sparkles size={20} />
             </div>
-            <button className="logout-btn" onClick={handleLogout}>
-              <LogOut size={16} style={{ marginRight: '0.5rem', display: 'inline', verticalAlign: 'middle' }} />
-              Sign Out
+            <div className="sidebar-brand-text">
+              <span className="brand-title">Skill Jobs</span>
+              <span className="brand-subtitle">Admin Dashboard</span>
+            </div>
+          </div>
+          <button className="sidebar-close-mobile" onClick={() => setSidebarOpen(false)}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Sidebar Navigation Groups */}
+        <div className="sidebar-nav-scroll">
+          {/* Dashboard */}
+          <div className="sidebar-group">
+            <button 
+              className={`sidebar-nav-item ${activeTab === null ? 'active' : ''}`}
+              onClick={() => { setActiveTab(null); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <Layout size={18} />
+              </div>
+              <span className="nav-item-label">Dashboard</span>
+              {activeTab === null && <span className="active-indicator" />}
+            </button>
+          </div>
+
+          <div className="sidebar-divider" />
+
+          {/* Management */}
+          <div className="sidebar-group">
+            <div className="sidebar-group-title">Management</div>
+            
+            <button 
+              className={`sidebar-nav-item ${activeTab === 'events' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('events'); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <Calendar size={18} />
+              </div>
+              <span className="nav-item-label">Manage Events & Workshops</span>
+              <span className="nav-badge-count">{totalEvents}</span>
+              {activeTab === 'events' && <span className="active-indicator" />}
+            </button>
+
+            <button 
+              className={`sidebar-nav-item ${activeTab === 'ambassadors' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('ambassadors'); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <Users size={18} />
+              </div>
+              <span className="nav-item-label">Ambassador Applications</span>
+              {pendingApps > 0 && <span className="nav-badge-pending">{pendingApps}</span>}
+              {activeTab === 'ambassadors' && <span className="active-indicator" />}
+            </button>
+          </div>
+
+          <div className="sidebar-divider" />
+
+          {/* Website Configuration */}
+          <div className="sidebar-group">
+            <div className="sidebar-group-title">Website Configuration</div>
+            
+            <button 
+              className={`sidebar-nav-item ${activeTab === 'homepage' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('homepage'); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <Briefcase size={18} />
+              </div>
+              <span className="nav-item-label">Homepage Content</span>
+              {activeTab === 'homepage' && <span className="active-indicator" />}
+            </button>
+
+            <button 
+              className={`sidebar-nav-item ${activeTab === 'aboutpage' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('aboutpage'); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <Award size={18} />
+              </div>
+              <span className="nav-item-label">About Page</span>
+              {activeTab === 'aboutpage' && <span className="active-indicator" />}
+            </button>
+
+            <button 
+              className={`sidebar-nav-item ${activeTab === 'ambassadorpage' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('ambassadorpage'); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <GraduationCap size={18} />
+              </div>
+              <span className="nav-item-label">Ambassador Page</span>
+              {activeTab === 'ambassadorpage' && <span className="active-indicator" />}
+            </button>
+
+            <button 
+              className={`sidebar-nav-item ${activeTab === 'contactpage' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('contactpage'); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <Phone size={18} />
+              </div>
+              <span className="nav-item-label">Contact Page</span>
+              {activeTab === 'contactpage' && <span className="active-indicator" />}
+            </button>
+          </div>
+
+          <div className="sidebar-divider" />
+
+          {/* Communication */}
+          <div className="sidebar-group">
+            <div className="sidebar-group-title">Communication</div>
+            
+            <button 
+              className={`sidebar-nav-item ${activeTab === 'contactmessages' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('contactmessages'); setSearchQuery(''); setSidebarOpen(false); }}
+            >
+              <div className="nav-item-icon">
+                <MessageSquare size={18} />
+              </div>
+              <span className="nav-item-label">Contact Messages</span>
+              <span className="nav-badge-count">{messages.length}</span>
+              {activeTab === 'contactmessages' && <span className="active-indicator" />}
             </button>
           </div>
         </div>
-      </section>
 
-      {/* Dashboard Stat Counters */}
-      <section style={{ paddingBottom: '2rem' }}>
-        <div className="container">
-          <div className="admin-stats-grid">
+        {/* Bottom Actions */}
+        <div className="sidebar-footer">
+          <button className="sidebar-footer-btn logout" onClick={handleLogout}>
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN INDEPENDENT SCROLLING CONTENT */}
+      <main className="admin-main-wrapper">
+        {/* TOP STICKY HEADER */}
+        <header className="admin-top-header">
+          <div className="top-header-left">
+            <button className="mobile-sidebar-toggle" onClick={() => setSidebarOpen(true)}>
+              <Menu size={22} />
+            </button>
+            <div className="header-breadcrumbs">
+              <span className="breadcrumb-root">Skill Jobs</span>
+              <ChevronRight size={14} className="breadcrumb-separator" />
+              <span className="breadcrumb-current">
+                {activeTab === null && "Overview"}
+                {activeTab === 'events' && "Manage Events & Workshops"}
+                {activeTab === 'ambassadors' && "Ambassador Applications"}
+                {activeTab === 'homepage' && "Homepage Content"}
+                {activeTab === 'aboutpage' && "About Page"}
+                {activeTab === 'ambassadorpage' && "Ambassador Page"}
+                {activeTab === 'contactpage' && "Contact Page"}
+                {activeTab === 'contactmessages' && "Contact Messages"}
+              </span>
+            </div>
+          </div>
+
+          <div className="top-header-right">
+            {/* Search bar inside header */}
+            <div className="header-search-box">
+              <Search className="header-search-icon" size={16} />
+              <input 
+                type="text" 
+                className="header-search-input" 
+                placeholder={
+                  activeTab === 'events' ? "Search events..." :
+                  activeTab === 'ambassadors' ? "Search applications..." :
+                  activeTab === 'contactmessages' ? "Search messages..." :
+                  "Search across control panel..."
+                }
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <button className="header-icon-btn" title="Notifications">
+              <Bell size={18} />
+              {pendingApps > 0 && <span className="notification-dot" />}
+            </button>
+
+            <div className="header-divider" />
+
+            <div className="header-admin-profile">
+              <div className="profile-avatar">
+                <User size={18} />
+              </div>
+              <div className="profile-info">
+                <span className="profile-name">Admin Profile</span>
+                <span className="profile-role">Super Admin</span>
+              </div>
+            </div>
+
+            <Link to="/" className="btn-header-homepage" title="Go to Homepage">
+              <HomeIcon size={16} />
+              <span>Homepage</span>
+            </Link>
+
+            <button className="btn-header-logout" onClick={handleLogout} title="Sign Out">
+              <LogOut size={16} />
+            </button>
+          </div>
+        </header>
+
+        {/* CONTENT BODY */}
+        <div className="admin-content-body">
+          {/* STATISTICS CARDS - ALWAYS PRESERVED & REDESIGNED */}
+          <div className="saas-stats-grid">
             <div 
-              className={`stat-card events clickable ${activeTab === 'events' ? 'active' : ''}`}
+              className={`saas-stat-card clickable ${activeTab === 'events' ? 'active' : ''}`}
               onClick={() => { setActiveTab(activeTab === 'events' ? null : 'events'); setSearchQuery(''); }}
-              style={{ cursor: 'pointer' }}
             >
-              <div className="stat-icon-box">
+              <div className="saas-stat-content">
+                <span className="saas-stat-label">Total Events</span>
+                <div className="saas-stat-number">{loading ? '...' : totalEvents}</div>
+                <div className="saas-stat-subtext">Workshops & live training sessions</div>
+              </div>
+              <div className="saas-stat-icon events">
                 <Calendar size={24} />
               </div>
-              <div className="stat-info">
-                <h3>{loading ? '...' : totalEvents}</h3>
-                <p>Total Events</p>
-              </div>
             </div>
+
             <div 
-              className={`stat-card pending clickable ${activeTab === 'ambassadors' ? 'active' : ''}`}
+              className={`saas-stat-card clickable ${activeTab === 'ambassadors' ? 'active' : ''}`}
               onClick={() => { setActiveTab(activeTab === 'ambassadors' ? null : 'ambassadors'); setSearchQuery(''); }}
-              style={{ cursor: 'pointer' }}
             >
-              <div className="stat-icon-box">
+              <div className="saas-stat-content">
+                <span className="saas-stat-label">Pending Applications</span>
+                <div className="saas-stat-number">{loading ? '...' : pendingApps}</div>
+                <div className="saas-stat-subtext">Awaiting administrative verification</div>
+              </div>
+              <div className="saas-stat-icon pending">
                 <Users size={24} />
               </div>
-              <div className="stat-info">
-                <h3>{loading ? '...' : pendingApps}</h3>
-                <p>Pending Applications</p>
-              </div>
             </div>
+
             <div 
-              className={`stat-card approved clickable ${activeTab === 'ambassadors' ? 'active' : ''}`}
+              className={`saas-stat-card clickable ${activeTab === 'ambassadors' ? 'active' : ''}`}
               onClick={() => { setActiveTab(activeTab === 'ambassadors' ? null : 'ambassadors'); setSearchQuery(''); }}
-              style={{ cursor: 'pointer' }}
             >
-              <div className="stat-icon-box">
+              <div className="saas-stat-content">
+                <span className="saas-stat-label">Approved Ambassadors</span>
+                <div className="saas-stat-number">{loading ? '...' : approvedAmbassadors}</div>
+                <div className="saas-stat-subtext">Active campus leaders nationwide</div>
+              </div>
+              <div className="saas-stat-icon approved">
                 <Award size={24} />
               </div>
-              <div className="stat-info">
-                <h3>{loading ? '...' : approvedAmbassadors}</h3>
-                <p>Approved Ambassadors</p>
-              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Navigation tabs controls */}
-      <section style={{ paddingBottom: '3rem' }}>
-        <div className="container">
-          <div className="admin-tabs">
-            <button 
-              className={`tab-btn ${activeTab === 'events' ? 'active' : ''}`}
-              onClick={() => { setActiveTab(activeTab === 'events' ? null : 'events'); setSearchQuery(''); }}
-            >
-              <Calendar size={18} />
-              <span>Manage Events & Workshops</span>
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'ambassadors' ? 'active' : ''}`}
-              onClick={() => { setActiveTab(activeTab === 'ambassadors' ? null : 'ambassadors'); setSearchQuery(''); }}
-            >
-              <Users size={18} />
-              <span>Ambassador Applications ({pendingApps} Pending)</span>
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'homepage' ? 'active' : ''}`}
-              onClick={() => { setActiveTab(activeTab === 'homepage' ? null : 'homepage'); setSearchQuery(''); }}
-            >
-              <Layout size={18} />
-              <span>Configure Homepage Content</span>
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'aboutpage' ? 'active' : ''}`}
-              onClick={() => { setActiveTab(activeTab === 'aboutpage' ? null : 'aboutpage'); setSearchQuery(''); }}
-            >
-              <Award size={18} />
-              <span>Configure About Page Content</span>
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'ambassadorpage' ? 'active' : ''}`}
-              onClick={() => { setActiveTab(activeTab === 'ambassadorpage' ? null : 'ambassadorpage'); setSearchQuery(''); }}
-            >
-              <GraduationCap size={18} />
-              <span>Configure Ambassador Page</span>
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'contactpage' ? 'active' : ''}`}
-              onClick={() => { setActiveTab(activeTab === 'contactpage' ? null : 'contactpage'); setSearchQuery(''); }}
-            >
-              <Phone size={18} />
-              <span>Configure Contact Page</span>
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'contactmessages' ? 'active' : ''}`}
-              onClick={() => { setActiveTab(activeTab === 'contactmessages' ? null : 'contactmessages'); setSearchQuery(''); }}
-            >
-              <MessageSquare size={18} />
-              <span>Contact Messages ({messages.length})</span>
-            </button>
-          </div>
+          {/* MAIN CONTENT DYNAMIC CONTAINER */}
+          <div className="saas-main-container">
+            {/* Toolbar Header for Tabular Lists */}
+            {(activeTab === 'events' || activeTab === 'ambassadors' || activeTab === 'contactmessages') && (
+              <div className="saas-section-header">
+                <div className="saas-section-title">
+                  <h3>
+                    {activeTab === 'events' && "Manage Events & Workshops Directory"}
+                    {activeTab === 'ambassadors' && `Ambassador Applications (${pendingApps} Pending)`}
+                    {activeTab === 'contactmessages' && `Inbound Contact Messages (${messages.length})`}
+                  </h3>
+                  <p>
+                    {activeTab === 'events' && "Create, edit, or remove live masterclasses and workshops."}
+                    {activeTab === 'ambassadors' && "Review cover applications, verify institutions, and update ambassador statuses."}
+                    {activeTab === 'contactmessages' && "Manage and review messages submitted through the website contact form."}
+                  </p>
+                </div>
+                
+                <div className="saas-section-actions">
+                  <div className="saas-toolbar-search">
+                    <Search className="saas-search-icon" size={16} />
+                    <input 
+                      type="text" 
+                      className="saas-search-input" 
+                      placeholder={
+                        activeTab === 'events' ? "Filter events..." :
+                        activeTab === 'ambassadors' ? "Filter candidates..." :
+                        "Filter messages..."
+                      }
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
 
-          {/* Search bar & Top actions Toolbar */}
-          {(activeTab === 'events' || activeTab === 'ambassadors' || activeTab === 'contactmessages') && (
-            <div className="admin-toolbar">
-              <div className="admin-search-wrapper">
-                <Search className="admin-search-icon" size={18} />
-                <input 
-                  type="text" 
-                  className="admin-search-input" 
-                  placeholder={
-                    activeTab === 'events' 
-                      ? "Search events..." 
-                      : activeTab === 'ambassadors' 
-                        ? "Search applications..." 
-                        : "Search messages..."
-                  }
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                  {activeTab === 'events' && (
+                    <button className="saas-btn-primary" onClick={handleOpenCreateModal}>
+                      <Plus size={18} />
+                      <span>Create Event</span>
+                    </button>
+                  )}
+
+                  {activeTab === 'ambassadors' && (
+                    <button className="saas-btn-primary" onClick={handleOpenAddAmbassadorModal}>
+                      <Plus size={18} />
+                      <span>Add Ambassador</span>
+                    </button>
+                  )}
+                </div>
               </div>
-              
-              {activeTab === 'events' && (
-                <button className="btn btn-primary" onClick={handleOpenCreateModal} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '8px', padding: '0.75rem 1.25rem' }}>
-                  <Plus size={18} />
-                  Create Event
-                </button>
-              )}
+            )}
 
-              {activeTab === 'ambassadors' && (
-                <button className="btn btn-primary" onClick={handleOpenAddAmbassadorModal} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '8px', padding: '0.75rem 1.25rem' }}>
-                  <Plus size={18} />
-                  Add Ambassador
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* TABLE / CARD LISTING VIEWPORT */}
-          <div className="admin-list-container">
             {loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '1rem' }}>
                 <Loader2 className="animate-spin text-gradient" size={48} style={{ animation: 'spin 1s linear infinite' }} />
@@ -3628,19 +3774,53 @@ const Admin = () => {
               )
             ) : (
               /* WELCOME / SELECT SECTION VIEW */
-              <div className="admin-welcome-card">
-                <div className="welcome-icon-box">
-                  <Award size={36} />
+              <div className="saas-empty-state-welcome">
+                <div className="welcome-hero-box">
+                  <div className="welcome-icon-circle">
+                    <Sparkles size={38} />
+                  </div>
+                  <h2>Welcome to the Enterprise Control Panel</h2>
+                  <p>
+                    Select any management module or website configuration from the fixed sidebar on the left to manage live workshops, review candidate applications, or customize portal content dynamically.
+                  </p>
+                  
+                  <div className="welcome-quick-actions">
+                    <button className="quick-action-card" onClick={() => setActiveTab('events')}>
+                      <div className="quick-action-icon blue">
+                        <Calendar size={20} />
+                      </div>
+                      <div className="quick-action-text">
+                        <h4>Manage Events</h4>
+                        <span>{totalEvents} total listed</span>
+                      </div>
+                    </button>
+
+                    <button className="quick-action-card" onClick={() => setActiveTab('ambassadors')}>
+                      <div className="quick-action-icon amber">
+                        <Users size={20} />
+                      </div>
+                      <div className="quick-action-text">
+                        <h4>Applications</h4>
+                        <span>{pendingApps} pending review</span>
+                      </div>
+                    </button>
+
+                    <button className="quick-action-card" onClick={() => setActiveTab('homepage')}>
+                      <div className="quick-action-icon purple">
+                        <Briefcase size={20} />
+                      </div>
+                      <div className="quick-action-text">
+                        <h4>CMS Editor</h4>
+                        <span>Configure website</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
-                <h3>Welcome to the Admin Control Panel</h3>
-                <p>
-                  Select one of the section buttons above to view and manage Events, candidate Ambassador Applications, or customize Homepage configurations dynamically.
-                </p>
               </div>
             )}
           </div>
         </div>
-      </section>
+      </main>
 
       {/* ==========================================================================
          GLASS MODALS VIEWPORTS
@@ -3677,6 +3857,7 @@ const Admin = () => {
                     <div className="form-group">
                       <label>Category</label>
                       <select name="category" value={eventForm.category} onChange={handleFormChange}>
+                        <option value="Event">Event</option>
                         <option value="Workshop">Workshop</option>
                         <option value="Summit">Summit</option>
                         <option value="Networking">Networking</option>

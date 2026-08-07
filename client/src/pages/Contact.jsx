@@ -5,8 +5,8 @@ import './Contact.css';
 
 const Contact = () => {
   const [contactInfo, setContactInfo] = useState({
-    email: "hello@skilljobs.com",
-    phone: "+880 1234-567890",
+    email: "corporate2@skill.jobs",
+    phone: "01847-334785",
     address: "Dhaka, Bangladesh",
     facebook: "#",
     linkedin: "#",
@@ -99,12 +99,12 @@ const Contact = () => {
       <section className="section">
         <div className="container">
           <div className="contact-grid">
-            <div className="contact-info card">
+            <div className="contact-info">
               <h3>Contact Information</h3>
               <p className="info-desc">Reach out to us through any of the following channels.</p>
               
               <div className="info-item">
-                <div className="info-icon"><Mail /></div>
+                <div className="info-icon"><Mail size={24} /></div>
                 <div>
                   <h4>Email Us</h4>
                   <p>{contactInfo.email}</p>
@@ -112,7 +112,7 @@ const Contact = () => {
               </div>
               
               <div className="info-item">
-                <div className="info-icon"><Phone /></div>
+                <div className="info-icon"><Phone size={24} /></div>
                 <div>
                   <h4>Call / WhatsApp</h4>
                   <p>{contactInfo.phone}</p>
@@ -120,7 +120,7 @@ const Contact = () => {
               </div>
               
               <div className="info-item">
-                <div className="info-icon"><MapPin /></div>
+                <div className="info-icon"><MapPin size={24} /></div>
                 <div>
                   <h4>Visit Us</h4>
                   <p>{contactInfo.address}</p>
@@ -137,8 +137,9 @@ const Contact = () => {
               </div>
             </div>
 
-            <div className="contact-form-wrapper card">
+            <div className="contact-form-wrapper">
               <h3>Send a Message</h3>
+              <p>Fill out the form below and we will get back to you as soon as possible.</p>
               <form className="contact-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>Your Name</label>

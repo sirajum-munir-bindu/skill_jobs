@@ -37,8 +37,8 @@ const Footer = () => {
             <h4 className="footer-title">Contact Info</h4>
             <ul className="footer-contact">
               <li><MapPin size={18} /> Dhaka, Bangladesh</li>
-              <li><Phone size={18} /> +880 1234-567890</li>
-              <li><Mail size={18} /> hello@skilljobs.com</li>
+              <li><Phone size={18} /> 01847-334785</li>
+              <li><Mail size={18} /> corporate2@skill.jobs</li>
             </ul>
           </div>
         </div>

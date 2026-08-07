@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Mail, Users, Loader2, X, Shield, Calendar, Sparkles } from 'lucide-react';
+import { ArrowLeft, Mail, Users, Loader2, X } from 'lucide-react';
 import './RunningAmbassadors.css';
 
 const formatDate = (dateStr) => {

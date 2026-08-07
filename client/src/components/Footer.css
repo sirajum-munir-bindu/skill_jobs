@@ -136,3 +136,30 @@
     gap: 2.5rem;
   }
 }
+
+@media (max-width: 576px) {
+  .footer {
+    padding: 3.5rem 0 1.5rem;
+  }
+  .footer-grid {
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  .footer-logo {
+    font-size: 1.35rem;
+  }
+  .footer-desc {
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .footer {
+    padding: 2.75rem 0 1.25rem;
+  }
+  .footer-title {
+    font-size: 1.15rem;
+    margin-bottom: 1.15rem;
+  }
+}

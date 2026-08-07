@@ -561,6 +561,7 @@ const Events = () => {
                           value={suggestForm.category} 
                           onChange={handleSuggestChange}
                         >
+                          <option value="Event">Event</option>
                           <option value="Workshop">Workshop</option>
                           <option value="Summit">Summit</option>
                           <option value="Networking">Networking</option>

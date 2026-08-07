@@ -145,8 +145,11 @@ const Navbar = () => {
           <Link to="/ambassador" className={`nav-link ${location.pathname === '/ambassador' ? 'active' : ''}`}>Ambassador</Link>
           <Link to="/events" className={`nav-link ${location.pathname === '/events' ? 'active' : ''}`}>Events</Link>
           <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
-          <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>Admin</Link>
-          <Link to="/ambassador" className="btn btn-primary nav-btn">Join Us</Link>
+          {localStorage.getItem('user') ? (
+            <Link to="/dashboard" className="btn btn-outline nav-btn">Dashboard</Link>
+          ) : (
+            <Link to="/ambassador" className="btn btn-primary nav-btn">Join Us</Link>
+          )}
         </div>
 
         <button className="mobile-toggle" onClick={() => setIsOpen(!isOpen)}>

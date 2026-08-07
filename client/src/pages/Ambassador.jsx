@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Zap, Shield, Users, Award, Briefcase, Camera, ChevronDown, Sparkles, Send, GraduationCap, Calendar, TrendingUp } from 'lucide-react';
 import './Ambassador.css';
@@ -132,11 +132,12 @@ const Ambassador = () => {
     }
   });
 
-  const [formData, setFormData] = useState({ name: '', email: '', university: '', reason: '', image: '' });
+  const [formData, setFormData] = useState({ university: '', reason: '', image: '' });
   const [status, setStatus] = useState('');
   const [activeUniversity, setActiveUniversity] = useState('DU');
   const [openFaqIdx, setOpenFaqIdx] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchConfigs = async () => {
@@ -174,16 +175,31 @@ const Ambassador = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus('Submitting...');
+    setStatus('Submitting application...');
     try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        setStatus('Please login first to apply.');
+        return;
+      }
+      const user = JSON.parse(userStr);
+
+      const payload = {
+        name: user.name,
+        email: user.email,
+        university: formData.university,
+        reason: formData.reason,
+        image: formData.image || ''
+      };
+
       const response = await fetch('http://localhost:5000/api/ambassador/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
         setStatus('Application submitted successfully!');
-        setFormData({ name: '', email: '', university: '', reason: '', image: '' });
+        setFormData({ university: '', reason: '', image: '' });
         setTimeout(() => {
           setShowApplyModal(false);
           setStatus('');
@@ -202,11 +218,16 @@ const Ambassador = () => {
   };
 
   const handleApplyForUniversity = (uniKey) => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      navigate(`/login?redirect=${encodeURIComponent('/ambassador')}`);
+      return;
+    }
     const campus = campusList.find(c => c.key === uniKey);
     if (campus) {
-      setFormData(prev => ({ ...prev, university: campus.fullName, name: '', email: '', reason: '', image: '' }));
+      setFormData(prev => ({ ...prev, university: campus.fullName, reason: '', image: '' }));
     } else {
-      setFormData(prev => ({ ...prev, university: '', name: '', email: '', reason: '', image: '' }));
+      setFormData(prev => ({ ...prev, university: '', reason: '', image: '' }));
     }
     setStatus('');
     setShowApplyModal(true);
@@ -248,6 +269,22 @@ const Ambassador = () => {
           >
             {ambassadorData.subtitle}
           </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            style={{ marginTop: '2rem' }}
+          >
+            {!localStorage.getItem('user') ? (
+              <Link to="/login?redirect=/ambassador" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', color: 'var(--saas-card)', borderColor: 'rgba(255,255,255,0.2)' }}>
+                Sign In to Apply
+              </Link>
+            ) : (
+              <button onClick={() => handleApplyForUniversity('')} className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', color: 'var(--saas-card)', borderColor: 'rgba(255,255,255,0.2)' }}>
+                Apply Now
+              </button>
+            )}
+          </motion.div>
         </div>
       </section>
 
@@ -645,14 +682,6 @@ const Ambassador = () => {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Full Name</label>
-                  <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. John Doe" required />
-                </div>
-                <div className="form-group">
-                  <label>Email Address</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required />
-                </div>
                 <div className="form-group">
                   <label>University / College</label>
                   <input type="text" name="university" value={formData.university} onChange={handleChange} placeholder="Where do you study?" required />

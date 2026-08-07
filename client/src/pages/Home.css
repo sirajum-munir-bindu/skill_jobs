@@ -991,22 +991,58 @@
 }
 
 @media (max-width: 576px) {
-  .stats-counter-grid {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
+  .hero-title-large {
+    font-size: 2.1rem;
   }
-  
-  .path-tab-btn {
+
+  .hero-buttons-centered {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+    padding: 0 0.5rem;
+  }
+
+  .hero-buttons-centered .btn {
     width: 100%;
     justify-content: center;
   }
+
+  .stats-counter-grid {
+    grid-template-columns: 1fr;
+    gap: 2.25rem;
+  }
+  
+  .stat-number {
+    font-size: 2.5rem;
+  }
+  
+  .path-tabs-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .path-tab-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem 1.25rem;
+  }
   
   .path-detail-card {
-    padding: 1.75rem;
+    padding: 1.5rem 1.25rem;
+  }
+
+  .path-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
   }
   
   .quiz-card {
-    padding: 1.75rem !important;
+    padding: 1.5rem 1.25rem !important;
+  }
+
+  .quiz-q-title {
+    font-size: 1.25rem;
   }
   
   .result-match-header {
@@ -1015,9 +1051,33 @@
     gap: 1rem;
   }
   
+  .result-actions {
+    flex-direction: column;
+  }
+
   .result-actions .btn {
     width: 100%;
     flex: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .hero-title-large {
+    font-size: 1.75rem;
+  }
+
+  .badge-pill {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.9rem;
+  }
+
+  .path-detail-card,
+  .quiz-card {
+    padding: 1.25rem 1rem !important;
+  }
+
+  .stat-number {
+    font-size: 2.1rem;
   }
 }
 
