@@ -31,6 +31,10 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Ambassador Edit State
+  const [isEditAmbassadorModalOpen, setIsEditAmbassadorModalOpen] = useState(false);
+  const [editingAmbassadorData, setEditingAmbassadorData] = useState({ id: '', name: '', email: '', phone: '', university: '', role: '', dept: '' });
+
   // Homepage CMS configurations states
   const [homepageConfigs, setHomepageConfigs] = useState({
     hero: { badge: '', titleMain: '', titleGradient: '', videoUrl: '' },
@@ -268,6 +272,7 @@ const Admin = () => {
   const [ambassadorForm, setAmbassadorForm] = useState({
     name: '',
     email: '',
+    phone: '',
     university: '',
     reason: 'Manually added by Admin.',
     status: 'Approved',
@@ -629,6 +634,40 @@ const Admin = () => {
     }
   };
 
+  const handleEditAmbassador = (app) => {
+    setEditingAmbassadorData({
+      id: app._id,
+      name: app.name || '',
+      email: app.email || '',
+      phone: app.phone || '',
+      university: app.university || '',
+      role: app.role || '',
+      dept: app.dept || ''
+    });
+    setIsEditAmbassadorModalOpen(true);
+  };
+
+  const handleUpdateAmbassador = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`http://localhost:5000/api/ambassadors/${editingAmbassadorData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingAmbassadorData)
+      });
+      if (response.ok) {
+        showToast('Ambassador details updated successfully.', 'success');
+        setIsEditAmbassadorModalOpen(false);
+        fetchData();
+      } else {
+        showToast('Failed to update ambassador.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network connection failure.', 'error');
+    }
+  };
+
   // View application details essay modal
   const handleViewApplication = (app) => {
     setCurrentApplication(app);
@@ -669,6 +708,7 @@ const Admin = () => {
     setAmbassadorForm({
       name: '',
       email: '',
+      phone: '',
       university: '',
       reason: 'Manually added by Admin.',
       status: 'Approved',
@@ -1217,7 +1257,10 @@ const Admin = () => {
                           </td>
                           <td>
                             <div className="action-buttons">
-                              <button className="btn-icon edit" title="Read Cover Application" onClick={() => handleViewApplication(app)}>
+                              <button className="btn-icon edit" title="Edit Application" onClick={() => handleEditAmbassador(app)}>
+                                <Edit2 size={16} />
+                              </button>
+                              <button className="btn-icon view" style={{ color: 'var(--primary)', background: 'rgba(2, 132, 199, 0.1)', border: '1px solid rgba(2, 132, 199, 0.15)' }} title="Read Cover Application" onClick={() => handleViewApplication(app)}>
                                 <Eye size={16} />
                               </button>
                               <button className="btn-icon delete" title="Delete Record" onClick={() => handleDeleteAmbassador(app._id)}>
@@ -4018,7 +4061,11 @@ const Admin = () => {
                     <div className="detail-text" style={{ fontSize: '0.95rem' }}>{currentApplication.email}</div>
                   </div>
                   <div className="detail-row">
-                    <label>University</label>
+                    <label>Phone Number</label>
+                    <div className="detail-text" style={{ fontSize: '0.95rem' }}>{currentApplication.phone || 'N/A'}</div>
+                  </div>
+                  <div className="detail-row">
+                    <label>University / Institution</label>
                     <div className="detail-text" style={{ fontSize: '0.95rem' }}>{currentApplication.university}</div>
                   </div>
                 </div>
@@ -4147,6 +4194,16 @@ const Admin = () => {
                     />
                   </div>
                   <div className="form-group" style={{ marginTop: '1rem' }}>
+                    <label>Phone Number</label>
+                    <input 
+                      type="tel" 
+                      name="phone" 
+                      value={ambassadorForm.phone} 
+                      onChange={(e) => setAmbassadorForm({ ...ambassadorForm, phone: e.target.value })} 
+                      placeholder="e.g. +8801..."
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginTop: '1rem' }}>
                     <label>University / Institution</label>
                     <input 
                       type="text" 
@@ -4267,6 +4324,64 @@ const Admin = () => {
                   Close
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* EDIT AMBASSADOR MODAL */}
+      <AnimatePresence>
+        {isEditAmbassadorModalOpen && (
+          <div className="modal-overlay">
+            <motion.div 
+              className="modal-card"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              style={{ maxWidth: '500px' }}
+            >
+              <div className="modal-header" style={{ background: 'linear-gradient(to right, rgba(2, 132, 199, 0.05), transparent)' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Edit2 size={20} style={{ color: 'var(--primary)' }} /> 
+                  <span className="text-gradient">Edit Ambassador</span>
+                </h3>
+                <button className="btn-icon close" onClick={() => setIsEditAmbassadorModalOpen(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpdateAmbassador}>
+                <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem' }}>
+                  <div className="form-group">
+                    <label>Name</label>
+                    <input type="text" required value={editingAmbassadorData.name} onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, name: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input type="email" required value={editingAmbassadorData.email} onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, email: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" required value={editingAmbassadorData.phone} onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, phone: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>University / Institution</label>
+                    <input type="text" required value={editingAmbassadorData.university} onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, university: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Role</label>
+                    <input type="text" value={editingAmbassadorData.role} onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, role: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Department</label>
+                    <input type="text" value={editingAmbassadorData.dept} onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, dept: e.target.value})} />
+                  </div>
+                </div>
+                <div className="modal-footer" style={{ padding: '1.5rem', borderTop: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsEditAmbassadorModalOpen(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary">Save Changes</button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

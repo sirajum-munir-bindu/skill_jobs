@@ -132,7 +132,7 @@ const Ambassador = () => {
     }
   });
 
-  const [formData, setFormData] = useState({ university: '', reason: '', image: '' });
+  const [formData, setFormData] = useState({ university: '', reason: '', image: '', phone: '' });
   const [status, setStatus] = useState('');
   const [activeUniversity, setActiveUniversity] = useState('DU');
   const [openFaqIdx, setOpenFaqIdx] = useState(null);
@@ -189,6 +189,7 @@ const Ambassador = () => {
         email: user.email,
         university: formData.university,
         reason: formData.reason,
+        phone: formData.phone,
         image: formData.image || ''
       };
 
@@ -685,6 +686,10 @@ const Ambassador = () => {
                 <div className="form-group">
                   <label>University / College</label>
                   <input type="text" name="university" value={formData.university} onChange={handleChange} placeholder="Where do you study?" required />
+                </div>
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="e.g. +8801..." required />
                 </div>
                 <div className="form-group">
                   <label>Why do you want to join?</label>

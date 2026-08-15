@@ -44,12 +44,24 @@ class EventModel(BaseModel):
 class AmbassadorModel(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
+    phone: Optional[str] = None
     university: str
     reason: str
     image: Optional[str] = None
     role: Optional[str] = None
     dept: Optional[str] = None
     status: Optional[str] = "Pending"
+
+class AmbassadorUpdateModel(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    university: Optional[str] = None
+    reason: Optional[str] = None
+    image: Optional[str] = None
+    role: Optional[str] = None
+    dept: Optional[str] = None
+    status: Optional[str] = None
 
 class UserRegisterModel(BaseModel):
     name: str

@@ -24,6 +24,7 @@ from models import (
     format_doc,
     EventModel,
     AmbassadorModel,
+    AmbassadorUpdateModel,
     AmbassadorStatusModel,
     UserRegisterModel,
     UserLoginModel,
@@ -447,6 +448,61 @@ def update_ambassador_status(id: str, status_data: AmbassadorStatusModel):
             return {"message": f"Application status updated locally to {status_data.status}!", "application": local_db["ambassadors"][idx]}
 
     raise HTTPException(status_code=404, detail="Application not found.")
+
+
+@app.put("/api/ambassadors/{id}")
+def update_ambassador(id: str, ambassador_data: AmbassadorUpdateModel):
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                sql_amb = db.query(SQLAmbassador).filter(SQLAmbassador.id == id).first()
+                if sql_amb:
+                    # Update fields
+                    if ambassador_data.name is not None:
+                        sql_amb.name = ambassador_data.name
+                    if ambassador_data.email is not None:
+                        sql_amb.email = ambassador_data.email
+                    if ambassador_data.phone is not None:
+                        sql_amb.phone = ambassador_data.phone
+                    if ambassador_data.university is not None:
+                        sql_amb.university = ambassador_data.university
+                    if ambassador_data.role is not None:
+                        sql_amb.role = ambassador_data.role
+                    if ambassador_data.dept is not None:
+                        sql_amb.dept = ambassador_data.dept
+                    
+                    db.commit()
+                    db.refresh(sql_amb)
+                    return {"message": "Ambassador updated successfully!", "application": format_doc(sql_amb)}
+            except Exception as err:
+                db.rollback()
+                print(f"Database error updating ambassador: {err}")
+            finally:
+                db.close()
+
+    # Fallback to local database
+    ambs = local_db.get("ambassadors", [])
+    for idx, a in enumerate(ambs):
+        if str(a.get("_id")) == id or str(a.get("id")) == id:
+            if ambassador_data.name is not None:
+                local_db["ambassadors"][idx]["name"] = ambassador_data.name
+            if ambassador_data.email is not None:
+                local_db["ambassadors"][idx]["email"] = ambassador_data.email
+            if ambassador_data.phone is not None:
+                local_db["ambassadors"][idx]["phone"] = ambassador_data.phone
+            if ambassador_data.university is not None:
+                local_db["ambassadors"][idx]["university"] = ambassador_data.university
+            if ambassador_data.role is not None:
+                local_db["ambassadors"][idx]["role"] = ambassador_data.role
+            if ambassador_data.dept is not None:
+                local_db["ambassadors"][idx]["dept"] = ambassador_data.dept
+            
+            save_local_database()
+            return {"message": "Ambassador updated locally!", "application": local_db["ambassadors"][idx]}
+
+    raise HTTPException(status_code=404, detail="Application not found.")
+
 
 
 @app.delete("/api/ambassadors/{id}")

@@ -101,7 +101,7 @@ const Contact = () => {
           <div className="contact-grid">
             <div className="contact-info">
               <h3>Contact Information</h3>
-              <p className="info-desc">Reach out to us through any of the following channels.</p>
+              <p className="contact-info-desc">Reach out to us through any of the following channels.</p>
               
               <div className="info-item">
                 <div className="info-icon"><Mail size={24} /></div>
@@ -148,7 +148,7 @@ const Contact = () => {
                     name="name" 
                     value={formData.name} 
                     onChange={handleChange} 
-                    placeholder="John Doe" 
+                    placeholder="Your Name" 
                     required 
                   />
                 </div>
@@ -159,7 +159,7 @@ const Contact = () => {
                     name="email" 
                     value={formData.email} 
                     onChange={handleChange} 
-                    placeholder="john@example.com" 
+                    placeholder="email@example.com" 
                     required 
                   />
                 </div>

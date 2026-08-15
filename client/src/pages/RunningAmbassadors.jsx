@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Mail, Users, Loader2, X } from 'lucide-react';
+import { ArrowLeft, Mail, Users, Loader2, X, Phone } from 'lucide-react';
 import './RunningAmbassadors.css';
 
 const formatDate = (dateStr) => {
@@ -228,9 +228,16 @@ const RunningAmbassadors = () => {
                             {amb.dept}
                           </div>
                         )}
-                        <a href={`mailto:${amb.email}`} className="card-email">
-                          <Mail size={12} /> {amb.email}
+                        <a href={`mailto:${amb.email}`} className="card-email" title={amb.email}>
+                          <Mail size={12} style={{ flexShrink: 0 }} /> 
+                          <span className="email-text">{amb.email}</span>
                         </a>
+                        {amb.phone && (
+                          <a href={`tel:${amb.phone}`} className="card-email" title={amb.phone} style={{ marginTop: '0.2rem' }}>
+                            <Phone size={12} style={{ flexShrink: 0 }} /> 
+                            <span className="email-text">{amb.phone}</span>
+                          </a>
+                        )}
                       </div>
                     </div>
 
@@ -292,6 +299,11 @@ const RunningAmbassadors = () => {
                   <a href={`mailto:${selectedAmbassador.email}`} className="amb-modal-email">
                     <Mail size={13} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} /> {selectedAmbassador.email}
                   </a>
+                  {selectedAmbassador.phone && (
+                    <a href={`tel:${selectedAmbassador.phone}`} className="amb-modal-email" style={{ marginTop: '0.3rem', display: 'block' }}>
+                      <Phone size={13} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} /> {selectedAmbassador.phone}
+                    </a>
+                  )}
                 </div>
               </div>
               
