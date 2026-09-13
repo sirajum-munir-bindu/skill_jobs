@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Zap, Shield, Users, Award, Briefcase, Camera, ChevronDown, Sparkles, Send, GraduationCap, Calendar, TrendingUp } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './Ambassador.css';
 
 const renderBenefitIcon = (iconName) => {
@@ -142,7 +143,7 @@ const Ambassador = () => {
   useEffect(() => {
     const fetchConfigs = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/configs');
+        const res = await fetch(`${API_BASE_URL}/api/configs`);
         if (res.ok) {
           const data = await res.json();
           setConfigs(prev => ({
@@ -193,7 +194,7 @@ const Ambassador = () => {
         image: formData.image || ''
       };
 
-      const response = await fetch('http://localhost:5000/api/ambassador/apply', {
+      const response = await fetch(`${API_BASE_URL}/api/ambassador/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -270,22 +271,6 @@ const Ambassador = () => {
           >
             {ambassadorData.subtitle}
           </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            style={{ marginTop: '2rem' }}
-          >
-            {!localStorage.getItem('user') ? (
-              <Link to="/login?redirect=/ambassador" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', color: 'var(--saas-card)', borderColor: 'rgba(255,255,255,0.2)' }}>
-                Sign In to Apply
-              </Link>
-            ) : (
-              <button onClick={() => handleApplyForUniversity('')} className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', color: 'var(--saas-card)', borderColor: 'rgba(255,255,255,0.2)' }}>
-                Apply Now
-              </button>
-            )}
-          </motion.div>
         </div>
       </section>
 

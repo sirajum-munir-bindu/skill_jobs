@@ -5,6 +5,7 @@ import {
   TrendingUp, Calendar, ChevronRight, CheckCircle2, ShieldCheck 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 import './About.css';
 
 const About = () => {
@@ -72,7 +73,7 @@ const About = () => {
   useEffect(() => {
     const fetchConfigs = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/configs');
+        const res = await fetch(`${API_BASE_URL}/api/configs`);
         if (res.ok) {
           const data = await res.json();
           setConfigs(prev => ({
@@ -312,10 +313,10 @@ const About = () => {
                 {aboutData.ctaDesc}
               </p>
               <div className="cta-buttons-wrap">
-                <Link to="/events" className="btn btn-white">
+                <a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer" className="btn btn-white">
                   <span>{aboutData.ctaBtn1Text}</span>
                   <ChevronRight size={16} />
-                </Link>
+                </a>
                 <Link to="/ambassador" className="btn btn-outline-white">
                   {aboutData.ctaBtn2Text}
                 </Link>

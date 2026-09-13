@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { LogIn, Mail, Lock, ArrowLeft } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './Auth.css';
 
 const Login = () => {
@@ -23,7 +24,7 @@ const Login = () => {
     setLoading(true);
     setStatus('');
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -56,6 +57,9 @@ const Login = () => {
             <Link to="/" className="back-link">
               <ArrowLeft size={16} /> Back to Home
             </Link>
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0 0.5rem' }}>
+              <img src="/logo.png" alt="Skill Jobs NEXT GEN" style={{ height: '56px', width: 'auto', borderRadius: '10px' }} />
+            </div>
             <h2>Welcome Back</h2>
             <p>Login to access your participant dashboard</p>
           </div>

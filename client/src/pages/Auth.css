@@ -183,3 +183,23 @@
     padding: 2.5rem 1.5rem;
   }
 }
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: 1.25rem 0.85rem;
+  }
+
+  .auth-card {
+    padding: 2rem 1.25rem;
+    border-radius: 18px;
+  }
+
+  .auth-header h2 {
+    font-size: 1.65rem;
+  }
+
+  .auth-header p {
+    font-size: 0.88rem;
+  }
+}
+

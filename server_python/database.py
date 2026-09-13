@@ -9,9 +9,18 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 load_dotenv()
 
-MYSQL_SERVER_URI = os.getenv("MYSQL_SERVER_URI", "mysql+pymysql://root:@127.0.0.1:3306")
-MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME", "skilljobs_db")
-MYSQL_URI = f"{MYSQL_SERVER_URI}/{MYSQL_DB_NAME}"
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    if DATABASE_URL.startswith("mysql://"):
+        DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+    MYSQL_URI = DATABASE_URL
+    MYSQL_SERVER_URI = DATABASE_URL
+    MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME", "bindu_db")
+else:
+    MYSQL_SERVER_URI = os.getenv("MYSQL_SERVER_URI", "mysql+pymysql://root:@127.0.0.1:3306")
+    MYSQL_DB_NAME = os.getenv("MYSQL_DB_NAME", "bindu_db")
+    MYSQL_URI = f"{MYSQL_SERVER_URI}/{MYSQL_DB_NAME}"
+
 DB_FILE_PATH = os.path.join(os.path.dirname(__file__), "in_memory_db.json")
 
 # Maintain mongo_db alias as None so any remaining imports or references don't crash
@@ -77,7 +86,49 @@ class SQLUser(Base):
     email = Column(String(255), unique=True)
     password = Column(String(255))
     role = Column(String(100), default="Participant")
+    permissions = Column(Text, nullable=True)
     createdAt = Column(String(100))
+
+
+class SQLWorkReport(Base):
+    __tablename__ = "work_reports"
+    id = Column(String(100), primary_key=True)
+    ambassadorEmail = Column(String(255), nullable=True)
+    ambassadorName = Column(String(255), nullable=True)
+    name = Column(String(255))
+    email = Column(String(255))
+    phone = Column(String(100))
+    institution = Column(String(255))
+    status = Column(String(100), default="Pending")
+    createdAt = Column(String(100))
+
+
+class SQLNfcOrder(Base):
+    __tablename__ = "nfc_orders"
+    id = Column(String(100), primary_key=True)
+    customerName = Column(String(255))
+    customerEmail = Column(String(255))
+    customerPhone = Column(String(100))
+    deliveryAddress = Column(Text)
+    district = Column(String(100), default="Dhaka")
+    cardVariantId = Column(String(100), nullable=True)
+    cardVariantName = Column(String(255), nullable=True)
+    customNameOnCard = Column(String(255), nullable=True)
+    customRoleOnCard = Column(String(255), nullable=True)
+    customOrgOnCard = Column(String(255), nullable=True)
+    paymentMethod = Column(String(100), default="bkash")
+    trxId = Column(String(255), nullable=True)
+    ambassadorCode = Column(String(100), nullable=True)
+    notes = Column(Text, nullable=True)
+    quantity = Column(String(50), default="1")
+    unitPrice = Column(String(50), default="0")
+    subtotal = Column(String(50), default="0")
+    deliveryCharge = Column(String(50), default="0")
+    discountAmount = Column(String(50), default="0")
+    grandTotal = Column(String(50), default="0")
+    status = Column(String(100), default="Pending")
+    createdAt = Column(String(100))
+
 
 
 engine = None
@@ -85,24 +136,31 @@ SessionLocal = None
 _db_connected_cache = None
 _last_check_time = 0
 
-# Try creating database and engine with fast timeout (1s)
+# 1. Try creating database if on local MySQL instance (skip/ignore on managed cloud DBs)
+connect_timeout = int(os.getenv("MYSQL_CONNECT_TIMEOUT", "5"))
+if not os.getenv("DATABASE_URL"):
+    try:
+        server_engine = create_engine(
+            MYSQL_SERVER_URI,
+            connect_args={"connect_timeout": connect_timeout},
+            pool_pre_ping=True
+        )
+        with server_engine.connect() as conn:
+            conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {MYSQL_DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"))
+            try:
+                conn.execute(text("SET GLOBAL max_allowed_packet=16777216;"))
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+# 2. Initialize main database engine
 try:
-    server_engine = create_engine(
-        MYSQL_SERVER_URI,
-        connect_args={"connect_timeout": 1},
-        pool_pre_ping=True
-    )
-    with server_engine.connect() as conn:
-        conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {MYSQL_DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"))
-        try:
-            conn.execute(text("SET GLOBAL max_allowed_packet=16777216;"))
-        except Exception:
-            pass
-    
     engine = create_engine(
         MYSQL_URI,
-        connect_args={"connect_timeout": 1},
+        connect_args={"connect_timeout": connect_timeout},
         pool_pre_ping=True,
+        pool_recycle=3600,
         pool_size=10,
         max_overflow=20
     )
@@ -116,7 +174,8 @@ try:
                 "ALTER TABLE ambassadors MODIFY image LONGTEXT;",
                 "ALTER TABLE ambassadors MODIFY reason LONGTEXT;",
                 "ALTER TABLE site_configs MODIFY value LONGTEXT;",
-                "ALTER TABLE messages MODIFY message LONGTEXT;"
+                "ALTER TABLE messages MODIFY message LONGTEXT;",
+                "ALTER TABLE users ADD COLUMN permissions TEXT NULL;"
             ]:
                 try:
                     conn.execute(text(stmt))
@@ -524,13 +583,204 @@ default_configs = {
         "facebook": "#",
         "linkedin": "#",
         "instagram": "#"
-    }
+    },
+    "ambassadorMetrics": {
+        "todayTarget": 0,
+        "todayAchieved": 0,
+        "monthlyTarget": 0,
+        "monthlyAchieved": 0,
+        "registered": 0,
+        "verified": 0,
+        "rejected": 0,
+        "qaa": 0,
+        "incentivePerQAA": 0,
+        "daysRemaining": 0,
+        "performanceCycle": "",
+        "announcement": ""
+    },
+    "ambassadorTasks": [],
+    "nfcCards": [
+        {
+            "id": "matte-black",
+            "name": "Obsidian Matte Black",
+            "badge": "Most Popular",
+            "theme": "dark",
+            "cardBg": "linear-gradient(135deg, #111827 0%, #1f2937 50%, #030712 100%)",
+            "textColor": "#ffffff",
+            "accentColor": "#38bdf8",
+            "texture": "matte",
+            "material": "Premium Matte Finish PVC",
+            "price": 499,
+            "originalPrice": 999,
+            "discount": "50% OFF",
+            "nfcColor": "#38bdf8",
+            "chipFinish": "gold"
+        },
+        {
+            "id": "cyber-cyan",
+            "name": "Skill Jobs Cyber Sky",
+            "badge": "Brand Edition",
+            "theme": "blue",
+            "cardBg": "linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #082f49 100%)",
+            "textColor": "#ffffff",
+            "accentColor": "#38bdf8",
+            "texture": "gloss",
+            "material": "High-Gloss Scratchproof PVC",
+            "price": 549,
+            "originalPrice": 1099,
+            "discount": "50% OFF",
+            "nfcColor": "#e0f2fe",
+            "chipFinish": "silver"
+        },
+        {
+            "id": "executive-gold",
+            "name": "Executive 24K Gold",
+            "badge": "Luxury Tier",
+            "theme": "gold",
+            "cardBg": "linear-gradient(135deg, #78350f 0%, #b45309 40%, #d97706 70%, #451a03 100%)",
+            "textColor": "#fef3c7",
+            "accentColor": "#fbbf24",
+            "texture": "metallic",
+            "material": "Brushed Golden Metal Finish",
+            "price": 899,
+            "originalPrice": 1799,
+            "discount": "50% OFF",
+            "nfcColor": "#fef08a",
+            "chipFinish": "gold"
+        },
+        {
+            "id": "titanium-silver",
+            "name": "Platinum Titanium Metal",
+            "badge": "Heavyweight",
+            "theme": "silver",
+            "cardBg": "linear-gradient(135deg, #334155 0%, #64748b 45%, #1e293b 80%, #0f172a 100%)",
+            "textColor": "#f8fafc",
+            "accentColor": "#94a3b8",
+            "texture": "metal",
+            "material": "Laser-Engraved Stainless Steel (25g)",
+            "price": 1399,
+            "originalPrice": 2799,
+            "discount": "50% OFF",
+            "nfcColor": "#cbd5e1",
+            "chipFinish": "silver"
+        },
+        {
+            "id": "pearl-white",
+            "name": "Minimalist Pearl White",
+            "badge": "Clean Modern",
+            "theme": "light",
+            "cardBg": "linear-gradient(135deg, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%)",
+            "textColor": "#0f172a",
+            "accentColor": "#0284c7",
+            "texture": "pearl",
+            "material": "Ultra-Smooth Frosted PVC",
+            "price": 499,
+            "originalPrice": 999,
+            "discount": "50% OFF",
+            "nfcColor": "#0284c7",
+            "chipFinish": "gold"
+        }
+    ],
+    "nfcReviews": [
+        {
+            "id": "rev-1",
+            "name": "Tanvir Ahmed",
+            "role": "Campus Ambassador Lead, DU",
+            "rating": 5,
+            "comment": "This NFC card is a total game changer during tech summits and career fairs! I just tap my card to a recruiter's iPhone and boom—my resume and GitHub profile open instantly.",
+            "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+            "createdAt": "2025-01-01T00:00:00.000Z"
+        },
+        {
+            "id": "rev-2",
+            "name": "Sabbir Hossain",
+            "role": "Full-Stack Software Engineer",
+            "rating": 5,
+            "comment": "The Obsidian Black finish looks ultra-premium. Everyone I meet is amazed when they see their phone open my portfolio with just one physical tap. Worth every single taka!",
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+            "createdAt": "2025-01-01T00:00:00.000Z"
+        },
+        {
+            "id": "rev-3",
+            "name": "Nusrat Jahan",
+            "role": "UI/UX Product Designer",
+            "rating": 5,
+            "comment": "No more carrying stacks of paper cards that get thrown away. Being able to update my portfolio links anytime from the dashboard is incredible.",
+            "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
+            "createdAt": "2025-01-01T00:00:00.000Z"
+        }
+    ]
 }
+
+default_users = [
+    {
+        "_id": "usr_1001",
+        "name": "Super Admin",
+        "email": "admin@skill.jobs",
+        "password": "admin123",
+        "role": "Super Admin",
+        "createdAt": "2026-01-01T00:00:00"
+    },
+    {
+        "_id": "usr_1002",
+        "name": "Corporate Relations",
+        "email": "corporate2@skill.jobs",
+        "password": "password123",
+        "role": "Admin",
+        "createdAt": "2026-01-15T10:30:00",
+        "permissions": [
+            "ambassadors",
+            "contactmessages",
+            "ambassadordashboard"
+        ]
+    },
+    {
+        "_id": "usr_1003",
+        "name": "Shahriar Khan",
+        "email": "auhin.and.aurin@gmail.com",
+        "password": "password123",
+        "role": "Campus Ambassador",
+        "createdAt": "2026-08-09T14:30:00",
+        "permissions": [
+            "ambassador_performance",
+            "ambassador_workreport"
+        ]
+    },
+    {
+        "_id": "usr_1004",
+        "name": "Maimuna Ahmed",
+        "email": "maishamaimunaahmed@gmail.com",
+        "password": "password123",
+        "role": "Campus Ambassador",
+        "createdAt": "2026-08-15T10:00:00",
+        "permissions": [
+            "ambassador_performance",
+            "ambassador_workreport"
+        ]
+    },
+    {
+        "_id": "usr_1005",
+        "name": "Md. Rubaeid Jahan Joy",
+        "email": "262-15-075@diu.edu.bd",
+        "password": "password123",
+        "role": "Campus Ambassador",
+        "createdAt": "2026-08-20T12:00:00",
+        "permissions": [
+            "ambassador_performance",
+            "ambassador_workreport"
+        ]
+    }
+]
+
+
+default_work_reports = []
 
 default_db = {
     "events": [],
     "ambassadors": [],
     "messages": [],
+    "users": default_users,
+    "workReports": default_work_reports,
     "configs": default_configs
 }
 
@@ -558,6 +808,15 @@ def load_local_database() -> dict:
                 updated = True
             if "ambassadors" not in parsed or parsed["ambassadors"] is None:
                 parsed["ambassadors"] = default_db["ambassadors"]
+                updated = True
+            if "users" not in parsed or not parsed["users"]:
+                parsed["users"] = default_users
+                updated = True
+            if "workReports" not in parsed or not parsed["workReports"]:
+                parsed["workReports"] = default_work_reports
+                updated = True
+            if "nfcOrders" not in parsed or parsed["nfcOrders"] is None:
+                parsed["nfcOrders"] = []
                 updated = True
             if updated:
                 with open(DB_FILE_PATH, "w", encoding="utf-8") as f:
@@ -601,10 +860,44 @@ def seed_initial_data():
                     updatedAt=datetime.now().isoformat()
                 )
                 db.add(new_cfg)
+        
+        # Check and seed default users
+        for u in default_users:
+            existing_user = db.query(SQLUser).filter(SQLUser.email == u["email"]).first()
+            if not existing_user:
+                db_user = SQLUser(
+                    id=u.get("_id", u.get("id")),
+                    name=u["name"],
+                    email=u["email"],
+                    password=u["password"],
+                    role=u.get("role", "Participant"),
+                    permissions=json.dumps(u.get("permissions", [])) if u.get("permissions") else None,
+                    createdAt=u.get("createdAt", datetime.now().isoformat())
+                )
+                db.add(db_user)
+
+        # Check and seed work reports from local_db if empty
+        reports_count = db.query(SQLWorkReport).count()
+        if reports_count == 0:
+            for wr in local_db.get("workReports", []):
+                new_wr = SQLWorkReport(
+                    id=str(wr.get("_id", wr.get("id"))),
+                    ambassadorEmail=wr.get("ambassadorEmail", ""),
+                    ambassadorName=wr.get("ambassadorName", ""),
+                    name=wr.get("name", ""),
+                    email=wr.get("email", ""),
+                    phone=wr.get("phone", ""),
+                    institution=wr.get("institution", ""),
+                    status=wr.get("status", "Pending"),
+                    createdAt=wr.get("createdAt", datetime.now().isoformat())
+                )
+                db.add(new_wr)
+
         db.commit()
-        print("MySQL database verified and seeded with initial configurations.")
+        print("MySQL database verified and seeded with initial configurations, users, and work reports.")
     except Exception as e:
         db.rollback()
         print(f"Error seeding MySQL: {e}")
+
     finally:
         db.close()

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, Loader2 } from 'lucide-react';
+import { Menu, X, Search, Loader2, Sparkles, CreditCard } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -57,7 +58,7 @@ const Navbar = () => {
     if (events.length > 0) return;
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/events');
+      const response = await fetch(`${API_BASE_URL}/api/events`);
       if (response.ok) {
         const data = await response.json();
         setEvents(data);
@@ -72,7 +73,7 @@ const Navbar = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/events?search=${encodeURIComponent(searchQuery.trim())}`);
+      window.open(`https://event.skill.jobs/?search=${encodeURIComponent(searchQuery.trim())}`, '_blank');
       setShowDropdown(false);
       setIsOpen(false); // Close mobile menu if open
     }
@@ -109,7 +110,7 @@ const Navbar = () => {
                 onClick={() => {
                   setSearchQuery(event.title);
                   setShowDropdown(false);
-                  navigate(`/events?search=${encodeURIComponent(event.title)}`);
+                  window.open(event.regLink || 'https://event.skill.jobs/', '_blank');
                   setIsOpen(false);
                 }}
               >
@@ -143,7 +144,17 @@ const Navbar = () => {
           <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Home</Link>
           <Link to="/about" className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}>About</Link>
           <Link to="/ambassador" className={`nav-link ${location.pathname === '/ambassador' ? 'active' : ''}`}>Ambassador</Link>
-          <Link to="/events" className={`nav-link ${location.pathname === '/events' ? 'active' : ''}`}>Events</Link>
+          
+          {/* Buy NFC Button with Top-Side Red Bold NEW Tag */}
+          <Link 
+            to="/buy-nfc" 
+            className={`nav-link ${location.pathname === '/buy-nfc' || location.pathname === '/nfc' ? 'active' : ''}`}
+          >
+            <span className="nfc-top-badge">NEW</span>
+            Buy NFC
+          </Link>
+
+          <a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer" className="nav-link">Events</a>
           <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
           {localStorage.getItem('user') ? (
             <Link to="/dashboard" className="btn btn-outline nav-btn">Dashboard</Link>

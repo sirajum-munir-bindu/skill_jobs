@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
+import { API_BASE_URL } from '../config/api';
 import './Home.css';
 
 // 2. Career Fit Quiz Questions
@@ -248,13 +249,9 @@ const Home = () => {
 
 
   useEffect(() => {
-    const fetchConfigsAndEvents = async () => {
+    const fetchConfigs = async () => {
       try {
-        const [configsRes, eventsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/configs'),
-          fetch('http://localhost:5000/api/events')
-        ]);
-        
+        const configsRes = await fetch(`${API_BASE_URL}/api/configs`);
         if (configsRes.ok) {
           const data = await configsRes.json();
           setConfigs(prev => ({
@@ -262,16 +259,11 @@ const Home = () => {
             ...data
           }));
         }
-
-        if (eventsRes.ok) {
-          const eventsData = await eventsRes.json();
-          setEvents(eventsData);
-        }
       } catch (err) {
-        console.warn('Failed to fetch configurations and events:', err);
+        console.warn('Failed to fetch configurations:', err);
       }
     };
-    fetchConfigsAndEvents();
+    fetchConfigs();
   }, []);
 
   // 1. FAQ Accordion State
@@ -411,7 +403,7 @@ const Home = () => {
               <span className="text-gradient">{configs.hero.titleGradient}</span>
             </h1>
             <div className="hero-buttons-centered">
-              <Link to="/events" className="btn btn-primary btn-lg">Explore Skills Programs</Link>
+              <a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg">Explore Skills Programs</a>
               <Link to="/ambassador" className="btn btn-secondary btn-lg">Join Campus Program</Link>
             </div>
           </motion.div>
@@ -581,77 +573,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Alternating Info Sections: Rich Educational Graphics */}
-      <section className="section info-block-section">
-        <div className="container">
-          {configs.infoBlocks && configs.infoBlocks.map((block, index) => {
-            const latestUpcoming = events.find(e => e.status !== 'Completed');
-            const latestCompleted = events.find(e => e.status === 'Completed');
-            
-            // Override static config images with latest database events dynamically
-            let displayImage = block.image;
-            if (index === 0 && latestUpcoming) {
-              displayImage = latestUpcoming.image;
-            } else if (index === 1 && latestCompleted) {
-              displayImage = latestCompleted.image;
-            }
 
-            return (
-              <div key={index} className={`info-block-row ${block.reverse ? 'reverse' : ''}`} style={{ marginBottom: index < configs.infoBlocks.length - 1 ? '4rem' : 0 }}>
-                {block.reverse ? (
-                  <>
-                    <div className="info-text-container">
-                      <span className="badge-pill">{block.badge}</span>
-                      <h3>{block.title}</h3>
-                      <p className="info-desc">{block.desc}</p>
-                      <ul className="info-bullet-list">
-                        {block.bullets && block.bullets.map((bullet, bIdx) => (
-                          <li key={bIdx}><CheckCircle className="bullet-icon" size={18} /> {bullet}</li>
-                        ))}
-                      </ul>
-                      <Link to={block.btnLink || '/events'} className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
-                        {block.btnText} <ArrowRight size={16} />
-                      </Link>
-                    </div>
-                    <div className="info-image-container">
-                      <img 
-                        src={displayImage} 
-                        alt={block.title} 
-                        className="info-img"
-                      />
-                      <div className="info-accent-blob secondary"></div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="info-image-container">
-                      <img 
-                        src={displayImage} 
-                        alt={block.title} 
-                        className="info-img"
-                      />
-                      <div className="info-accent-blob"></div>
-                    </div>
-                    <div className="info-text-container">
-                      <span className="badge-pill">{block.badge}</span>
-                      <h3>{block.title}</h3>
-                      <p className="info-desc">{block.desc}</p>
-                      <ul className="info-bullet-list">
-                        {block.bullets && block.bullets.map((bullet, bIdx) => (
-                          <li key={bIdx}><CheckCircle className="bullet-icon" size={18} /> {bullet}</li>
-                        ))}
-                      </ul>
-                      <Link to={block.btnLink || '/events'} className="btn btn-secondary" style={{ marginTop: '1.5rem' }}>
-                        {block.btnText} <ArrowRight size={16} />
-                      </Link>
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
 
       {/* Interactive Career Matcher Section */}
       <section className="section bg-light quiz-widget-section">
@@ -851,7 +773,7 @@ const Home = () => {
           <h2 style={{ marginBottom: '0' }}>{configs.cta?.title || "Ready to unlock your professional potential?"}</h2>
           <p style={{ maxWidth: '800px', margin: '0 auto' }}>{configs.cta?.desc || "Register for our upcoming certified workshops and fast-track your applications to 500+ top recruiters today."}</p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1rem' }}>
-            <Link to={configs.cta?.btn1Link || "/events"} className="btn btn-white">{configs.cta?.btn1Text || "View Upcoming Classes"} <ArrowRight size={20} className="inline-icon" /></Link>
+            <a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer" className="btn btn-white">{configs.cta?.btn1Text || "View Upcoming Classes"} <ArrowRight size={20} className="inline-icon" /></a>
             <Link to={configs.cta?.btn2Link || "/contact"} className="btn btn-secondary" style={{ background: 'transparent', borderColor: 'white', color: 'white' }}>{configs.cta?.btn2Text || "Contact Advisors"}</Link>
           </div>
         </div>

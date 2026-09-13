@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './Auth.css';
 
 const Register = () => {
@@ -22,7 +23,7 @@ const Register = () => {
     setLoading(true);
     setStatus('');
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -55,6 +56,9 @@ const Register = () => {
             <Link to="/" className="back-link">
               <ArrowLeft size={16} /> Back to Home
             </Link>
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0 0.5rem' }}>
+              <img src="/logo.png" alt="Skill Jobs NEXT GEN" style={{ height: '56px', width: 'auto', borderRadius: '10px' }} />
+            </div>
             <h2>Create an Account</h2>
             <p>Join our community today</p>
           </div>

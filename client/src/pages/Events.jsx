@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Clock, AlertTriangle, Loader2, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './Events.css';
 
 const Events = () => {
@@ -89,7 +90,7 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/events');
+        const response = await fetch(`${API_BASE_URL}/api/events`);
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }

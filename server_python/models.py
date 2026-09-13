@@ -1,7 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional, Any, List
 from datetime import datetime
-from bson import ObjectId
+try:
+    from bson import ObjectId
+except ImportError:
+    class ObjectId:
+        pass
 
 
 def format_doc(doc: Any) -> dict:
@@ -28,6 +32,10 @@ def format_doc(doc: Any) -> dict:
         elif isinstance(v, ObjectId):
             doc[k] = str(v)
     return doc
+
+
+class BulkDeleteUsersModel(BaseModel):
+    userIds: List[str]
 
 
 class EventModel(BaseModel):
@@ -78,6 +86,20 @@ class UserUpdateModel(BaseModel):
     email: str
     password: Optional[str] = None
 
+class AdminUserCreateModel(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: Optional[str] = "Participant"
+    permissions: Optional[List[str]] = None
+
+class AdminUserUpdateModel(BaseModel):
+    name: str
+    email: str
+    role: Optional[str] = "Participant"
+    password: Optional[str] = None
+    permissions: Optional[List[str]] = None
+
 
 class AmbassadorStatusModel(BaseModel):
     status: str
@@ -93,3 +115,57 @@ class MessageModel(BaseModel):
     email: str
     subject: str
     message: str
+
+
+class WorkReportModel(BaseModel):
+    name: str
+    email: str
+    phone: str
+    ambassadorEmail: Optional[str] = None
+    ambassadorName: Optional[str] = None
+    institution: Optional[str] = None
+    status: Optional[str] = "Pending"
+    createdAt: Optional[str] = None
+
+
+class WorkReportUpdateModel(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    institution: Optional[str] = None
+    status: Optional[str] = None
+
+
+class WorkReportStatusModel(BaseModel):
+    status: str
+
+
+class NfcOrderModel(BaseModel):
+    id: Optional[str] = None
+    customerName: str
+    customerEmail: str
+    customerPhone: str
+    deliveryAddress: str
+    district: Optional[str] = "Dhaka"
+    cardVariantId: Optional[str] = None
+    cardVariantName: Optional[str] = None
+    customNameOnCard: Optional[str] = None
+    customRoleOnCard: Optional[str] = None
+    customOrgOnCard: Optional[str] = None
+    paymentMethod: Optional[str] = "bkash"
+    trxId: Optional[str] = ""
+    ambassadorCode: Optional[str] = ""
+    notes: Optional[str] = ""
+    quantity: Optional[Any] = 1
+    unitPrice: Optional[Any] = 0
+    subtotal: Optional[Any] = 0
+    deliveryCharge: Optional[Any] = 0
+    discountAmount: Optional[Any] = 0
+    grandTotal: Optional[Any] = 0
+    status: Optional[str] = "Pending"
+    createdAt: Optional[str] = None
+
+
+class NfcOrderStatusModel(BaseModel):
+    status: str
+

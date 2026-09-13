@@ -31,8 +31,8 @@ const Footer = () => {
         <div className="footer-grid">
           <div className="footer-col">
             <Link to="/" className="footer-logo" style={{ display: 'inline-flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ background: 'white', padding: '6px 14px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                <img src="/logo.png" alt="Skill Jobs" style={{ height: '32px', width: 'auto' }} />
+              <div style={{ background: 'white', padding: '8px 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}>
+                <img src="/logo.png" alt="Skill Jobs NEXT GEN" style={{ height: '44px', width: 'auto', display: 'block' }} />
               </div>
             </Link>
             <p className="footer-desc">
@@ -50,7 +50,8 @@ const Footer = () => {
             <ul className="footer-links">
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/ambassador">Ambassador Program</Link></li>
-              <li><Link to="/events">Events & Workshops</Link></li>
+              <li><Link to="/buy-nfc">Smart NFC Card</Link></li>
+              <li><a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer">Events & Workshops</a></li>
               <li><Link to="/contact">Contact Us</Link></li>
             </ul>
           </div>

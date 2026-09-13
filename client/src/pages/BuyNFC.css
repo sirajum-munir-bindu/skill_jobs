@@ -1,0 +1,2835 @@
+/* ==========================================================================
+   Skill Jobs Smart NFC Promotional & Customizer Page Styles
+   ========================================================================== */
+
+.nfc-promo-page {
+  position: relative;
+  overflow-x: hidden;
+  padding-top: 100px; /* Spacing below floating navbar */
+  color: var(--text-dark);
+}
+
+/* Ambient Background Blur Orbs */
+.nfc-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.nfc-glow-orb-1 {
+  top: 50px;
+  right: -5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.18) 0%, transparent 70%);
+}
+
+.nfc-glow-orb-2 {
+  top: 900px;
+  left: -8%;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.14) 0%, transparent 70%);
+}
+
+.nfc-glow-orb-3 {
+  bottom: 200px;
+  right: -5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.15) 0%, transparent 70%);
+}
+
+/* Typography & General Sub-Badges */
+.nfc-gradient-text {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline;
+}
+
+.sub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  padding: 0.35rem 0.9rem;
+  border-radius: 50px;
+  margin-bottom: 0.8rem;
+}
+
+.section-header-center {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 3.5rem auto;
+}
+
+.section-title {
+  font-size: 2.35rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.25;
+  margin-bottom: 1rem;
+}
+
+.section-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   TOP 3D CARD SLIDESHOW SECTION
+   ========================================================================== */
+
+.nfc-top-slideshow-section {
+  padding: 1.5rem 0 1rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+.nfc-top-slideshow-card {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  padding: 0.5rem 0 1.25rem 0;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.slideshow-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: none !important;
+}
+
+.slideshow-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.1);
+  padding: 0.4rem 0.95rem;
+  border-radius: 50px;
+  border: none !important;
+  letter-spacing: 0.02em;
+}
+
+.slideshow-status-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.edition-badge-live {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+  background: #f8fafc;
+  border: none !important;
+  padding: 0.35rem 0.85rem;
+  border-radius: 50px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.face-indicator-pill {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: rgba(14, 165, 233, 0.12);
+  padding: 0.35rem 0.75rem;
+  border-radius: 50px;
+  border: none !important;
+}
+
+.counter-pill {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.35rem 0.75rem;
+  border-radius: 50px;
+  border: none !important;
+}
+
+/* 3D Showcase Stage */
+.slideshow-stage-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1.75rem 0 1.25rem 0;
+  overflow: visible;
+}
+
+.slideshow-card-stage-anchor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+}
+
+/* Dynamic Ambient Glow Aura */
+.slideshow-ambient-aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 125%;
+  height: 135%;
+  filter: blur(45px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.75;
+  transition: background 0.8s ease;
+}
+
+/* Realistic 3D Ground Shadow */
+.slideshow-ground-shadow {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 75%;
+  height: 22px;
+  background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0) 72%);
+  border-radius: 50%;
+  filter: blur(6px);
+  z-index: 1;
+  pointer-events: none;
+  animation: shadowBreathe 4s ease-in-out infinite alternate;
+}
+
+@keyframes shadowBreathe {
+  0% {
+    transform: translateX(-50%) scale(0.92);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(-50%) scale(1.06);
+    opacity: 0.85;
+  }
+}
+
+.slideshow-nav-arrow {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(2, 132, 199, 0.15) !important;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 
+    0 4px 14px rgba(15, 23, 42, 0.08),
+    0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.slideshow-nav-arrow:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7 !important;
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.4);
+}
+
+.slideshow-nav-arrow:active {
+  transform: scale(0.96);
+}
+
+.slideshow-3d-card-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 285px;
+  perspective: 1400px;
+  cursor: pointer;
+  z-index: 2;
+  will-change: transform, opacity;
+}
+
+/* Slide Animations: Right Entrance -> Center Display -> Left Exit */
+@keyframes cardSlideInFromRight {
+  0% {
+    transform: translate3d(min(650px, 90vw), 0, 0) scale(0.92);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cardSlideOutToLeft {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(max(-650px, -90vw), 0, 0) scale(0.92);
+    opacity: 0;
+  }
+}
+
+/* Gentle 3D levitation when resting in center */
+@keyframes cardLevitate {
+  0% {
+    transform: translate3d(0, 0px, 0) rotateX(0deg);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) rotateX(1deg);
+  }
+  100% {
+    transform: translate3d(0, 0px, 0) rotateX(0deg);
+  }
+}
+
+.slideshow-3d-card-wrapper.slide-phase-enter-right {
+  animation: cardSlideInFromRight 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.slideshow-3d-card-wrapper.slide-phase-center {
+  animation: cardLevitate 4.5s ease-in-out infinite;
+}
+
+.slideshow-3d-card-wrapper.slide-phase-exit-left {
+  animation: cardSlideOutToLeft 0.85s cubic-bezier(0.38, 0, 0.24, 1) forwards;
+  pointer-events: none;
+}
+
+.slideshow-3d-card-wrapper:hover.slide-phase-center {
+  transform: translate3d(0, -8px, 0) scale(1.02);
+  transition: transform 0.3s ease;
+}
+
+.slideshow-card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.85s cubic-bezier(0.2, 0.85, 0.35, 1.05);
+  box-shadow: 
+    0 24px 50px -12px rgba(0, 0, 0, 0.32),
+    0 6px 16px rgba(0, 0, 0, 0.1);
+  border: none !important;
+  outline: none !important;
+  overflow: hidden;
+}
+
+/* Holographic dynamic sheen sweep */
+.slideshow-card-face::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.08) 40%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.08) 60%,
+    transparent 75%
+  );
+  pointer-events: none;
+  transform: rotate(-20deg) translate3d(-100%, 0, 0);
+  animation: cardHoloGlint 6.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes cardHoloGlint {
+  0%, 25% {
+    transform: rotate(-20deg) translate3d(-120%, 0, 0);
+  }
+  60%, 100% {
+    transform: rotate(-20deg) translate3d(120%, 0, 0);
+  }
+}
+
+.slideshow-card-front {
+  transform: rotateY(0deg);
+}
+
+.slideshow-card-back {
+  transform: rotateY(180deg);
+}
+
+.slideshow-3d-card-wrapper.flipped .slideshow-card-front {
+  transform: rotateY(-180deg);
+}
+
+.slideshow-3d-card-wrapper.flipped .slideshow-card-back {
+  transform: rotateY(0deg);
+}
+
+/* Interactive Hint Chip */
+.slideshow-hint-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.65rem auto 0 auto;
+  padding: 0.4rem 1rem;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+  border-radius: 50px;
+  color: #0284c7;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.slideshow-hint-chip:hover {
+  background: rgba(2, 132, 199, 0.16);
+  border-color: rgba(2, 132, 199, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18);
+}
+
+.hint-chip-sparkle {
+  color: #0284c7;
+  animation: pulseSparkle 2s ease-in-out infinite;
+}
+
+@keyframes pulseSparkle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+
+/* Slideshow Footer & Navigation Bar */
+.slideshow-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.75rem;
+  border-top: none !important;
+}
+
+.slideshow-dots-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.slideshow-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.18);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.slideshow-dot.active {
+  width: 28px;
+  border-radius: 20px;
+  background: #0284c7;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+}
+
+.slideshow-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.slideshow-flip-toggle-btn,
+.slideshow-pause-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #f1f5f9;
+  border: none !important;
+  padding: 0.45rem 0.95rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slideshow-flip-toggle-btn:hover,
+.slideshow-pause-btn:hover {
+  background: #e2e8f0;
+  color: #0284c7;
+}
+
+.slideshow-buy-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.15rem;
+  border-radius: 50px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
+  transition: all 0.25s ease;
+}
+
+.slideshow-buy-card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(2, 132, 199, 0.45);
+}
+
+@media (max-width: 640px) {
+  .slideshow-3d-card-wrapper {
+    max-width: 100%;
+    height: 200px;
+  }
+
+  .slideshow-footer-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .slideshow-actions-group {
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   1. HERO SECTION
+   ========================================================================== */
+
+.nfc-hero-section {
+  padding: 2rem 0 4.5rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.nfc-hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+
+.nfc-hero-title {
+  font-size: 2.85rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.nfc-hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 1.75rem;
+}
+
+.nfc-hero-subtitle strong {
+  color: var(--primary);
+}
+
+.nfc-pill-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.nfc-pill-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(2, 132, 199, 0.15);
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.pill-icon {
+  color: var(--accent);
+}
+
+.nfc-hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.nfc-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.8rem !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  border-radius: 50px !important;
+  background: var(--gradient) !important;
+  box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.45) !important;
+  color: white !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer;
+}
+
+.nfc-cta-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 30px -5px rgba(2, 132, 199, 0.55) !important;
+}
+
+.nfc-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  border-radius: 50px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  color: var(--primary) !important;
+}
+
+.nfc-cta-secondary:hover {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   3D CARD STAGE & INTERACTIVE CUSTOMIZER
+   ========================================================================== */
+
+.nfc-hero-stage {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+  border-radius: 28px;
+  padding: 1.75rem;
+  box-shadow: 
+    0 25px 50px -12px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+}
+
+.nfc-stage-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.05);
+  padding: 0.35rem;
+  border-radius: 50px;
+  margin-bottom: 1.75rem;
+}
+
+.stage-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.25s ease;
+}
+
+.stage-tab-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 3D Card Container */
+.nfc-3d-card-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 250px;
+  margin: 0 auto 1.5rem auto;
+  perspective: 1200px;
+  cursor: pointer;
+  transition: transform 0.4s ease;
+}
+
+.nfc-3d-card-wrapper:hover {
+  transform: translateY(-4px);
+}
+
+.nfc-card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.nfc-card-front {
+  transform: rotateY(0deg);
+}
+
+.nfc-card-back {
+  transform: rotateY(180deg);
+}
+
+.nfc-3d-card-wrapper.flipped .nfc-card-front {
+  transform: rotateY(-180deg);
+}
+
+.nfc-3d-card-wrapper.flipped .nfc-card-back {
+  transform: rotateY(0deg);
+}
+
+/* Card Metallic Sheen Reflection */
+.nfc-card-sheen {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 60%
+  );
+  pointer-events: none;
+  animation: cardSheenSlide 6s infinite linear;
+}
+
+@keyframes cardSheenSlide {
+  0% { transform: translate(-30%, -30%) rotate(25deg); }
+  100% { transform: translate(30%, 30%) rotate(25deg); }
+}
+
+/* Network Contactless Blink Feature Over The Card */
+.nfc-network-pulse-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+}
+
+.network-wave-radar {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.network-ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.3);
+  animation: smoothWhiteBlinkPulse 3s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.network-ripple-1 {
+  width: 48px;
+  height: 48px;
+  animation-delay: 0s;
+}
+
+.network-ripple-2 {
+  width: 90px;
+  height: 90px;
+  animation-delay: 0.8s;
+}
+
+.network-ripple-3 {
+  width: 136px;
+  height: 136px;
+  animation-delay: 1.6s;
+}
+
+@keyframes smoothWhiteBlinkPulse {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.9;
+    border-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.8), inset 0 0 8px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    opacity: 0.55;
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 24px rgba(255, 255, 255, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.25);
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+    border-color: rgba(255, 255, 255, 0);
+    box-shadow: 0 0 35px rgba(255, 255, 255, 0);
+  }
+}
+
+.nfc-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+}
+
+.nfc-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.nfc-card-logo-img {
+  height: 28px;
+  width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.nfc-card-brand-sub {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+}
+
+.nfc-chip-symbol {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.nfc-wave-icon {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.nfc-metallic-chip {
+  width: 32px;
+  height: 24px;
+  border-radius: 5px;
+  border: 1px solid rgba(0,0,0,0.15);
+  box-shadow: inset 0 1px 3px rgba(255,255,255,0.4);
+}
+
+.chip-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 60%, #f59e0b 100%);
+}
+
+.chip-silver {
+  background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 60%, #cbd5e1 100%);
+}
+
+/* NFC Wave Signal Animation */
+.nfc-card-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 52px;
+  z-index: 5;
+}
+
+.nfc-card-dynamic-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50px;
+  padding: 3px 10px;
+  color: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nfc-card-dynamic-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.dynamic-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: livePulseDot 2s infinite;
+}
+
+@keyframes livePulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.dynamic-btn-label {
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.dynamic-btn-val {
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nfc-contactless-signal {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signal-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  animation: signalPulse 3s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.signal-ring-1 { width: 30px; height: 30px; animation-delay: 0s; }
+.signal-ring-2 { width: 50px; height: 50px; animation-delay: 0.8s; }
+.signal-ring-3 { width: 70px; height: 70px; animation-delay: 1.6s; }
+
+@keyframes signalPulse {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.nfc-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 2;
+}
+
+.nfc-card-holder-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.nfc-holder-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.nfc-holder-role {
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.nfc-holder-org {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.nfc-card-watermark span {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+  border: 1px solid currentColor;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Card Back Styles */
+.nfc-back-magnetic-stripe {
+  position: absolute;
+  top: 25px;
+  left: 0;
+  width: 100%;
+  height: 38px;
+  background: #0f172a;
+}
+
+.nfc-back-content {
+  margin-top: 55px;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  z-index: 2;
+}
+
+.nfc-qr-box {
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.nfc-qr-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.nfc-back-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: left;
+}
+
+.nfc-back-instruction {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.nfc-back-url {
+  font-size: 0.75rem;
+  font-family: monospace;
+  opacity: 0.85;
+}
+
+.nfc-back-powered {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+/* Card Controls */
+.nfc-card-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.nfc-flip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  padding: 0.4rem 0.85rem;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+  transition: all 0.2s ease;
+}
+
+.nfc-flip-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.nfc-dynamic-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(2, 132, 199, 0.16));
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  padding: 0.4rem 0.95rem;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.nfc-dynamic-bar-btn:hover {
+  background: var(--accent);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+}
+
+.dynamic-pulse-badge {
+  background: rgba(2, 132, 199, 0.18);
+  font-size: 0.65rem;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-weight: 800;
+}
+
+.nfc-dynamic-bar-btn:hover .dynamic-pulse-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.nfc-material-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.nfc-material-label strong {
+  color: var(--primary);
+}
+
+/* Material & Variant Swatches in Customizer */
+.nfc-variant-selector {
+  margin-bottom: 1.25rem;
+}
+
+.nfc-variant-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.6rem;
+  text-align: left;
+}
+
+.nfc-variant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.nfc-variant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.nfc-variant-chip:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.nfc-variant-chip.active {
+  background: rgba(2, 132, 199, 0.06);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+}
+
+.variant-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.15);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.variant-mini-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  background: #ef4444;
+  color: white;
+  padding: 1px 5px;
+  border-radius: 20px;
+}
+
+/* Live Text Inputs in Customizer */
+.nfc-live-text-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.nfc-input-group {
+  text-align: left;
+}
+
+.nfc-input-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.nfc-input-group input {
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.nfc-input-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+/* ==========================================================================
+   PHONE SIMULATOR COMPONENT (What happens on tap)
+   ========================================================================== */
+
+.nfc-phone-simulator-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nfc-phone-frame {
+  width: 100%;
+  max-width: 320px;
+  background: #0f172a;
+  border: 6px solid #1e293b;
+  border-radius: 36px;
+  padding: 12px 10px;
+  box-shadow: 0 25px 50px -15px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.phone-notch {
+  width: 110px;
+  height: 18px;
+  background: #0f172a;
+  border-radius: 0 0 14px 14px;
+  margin: -12px auto 8px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.phone-camera {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #334155;
+}
+
+.phone-speaker {
+  width: 30px;
+  height: 3px;
+  border-radius: 3px;
+  background: #334155;
+}
+
+.phone-nfc-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(2, 132, 199, 0.9);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  margin-bottom: 10px;
+  text-align: left;
+  animation: bannerSlideIn 0.5s ease-out;
+}
+
+@keyframes bannerSlideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.phone-nfc-banner strong {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.phone-nfc-banner span {
+  font-size: 0.65rem;
+  opacity: 0.9;
+}
+
+.phone-screen-content {
+  background: #f8fafc;
+  border-radius: 24px;
+  padding: 1.25rem 0.9rem;
+}
+
+.phone-profile-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.phone-avatar-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.phone-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  object-fit: cover;
+}
+
+.phone-verified-tick {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #0284c7;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.phone-profile-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 2px;
+}
+
+.phone-profile-title {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.phone-profile-org {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(2, 132, 199, 0.08);
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-top: 4px;
+}
+
+.phone-save-contact-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: var(--gradient);
+  color: white;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.65rem;
+  border-radius: 50px;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+.phone-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.phone-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.link-icon {
+  margin-right: 0.45rem;
+}
+
+.link-web { color: #0284c7; }
+.link-linkedin { color: #0077b5; }
+.link-cert { color: #f59e0b; }
+.link-whatsapp { color: #22c55e; }
+
+.phone-sim-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* ==========================================================================
+   2. HOW IT WORKS 3-STEP WALKTHROUGH
+   ========================================================================== */
+
+.nfc-how-it-works-section {
+  padding: 5rem 0;
+  position: relative;
+}
+
+.nfc-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  position: relative;
+}
+
+.nfc-step-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.nfc-step-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent);
+  box-shadow: 0 20px 40px -15px rgba(2, 132, 199, 0.12);
+}
+
+.step-num-badge {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gradient);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 800;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+.step-illustration {
+  margin: 1rem 0 1.5rem 0;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nfc-step-card h4 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.6rem;
+}
+
+.nfc-step-card p {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   3. PRICING TIERS
+   ========================================================================== */
+
+.nfc-pricing-section {
+  padding: 5rem 0;
+  background: rgba(248, 250, 252, 0.7);
+}
+
+.nfc-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.nfc-pricing-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.03);
+}
+
+.nfc-pricing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 50px -15px rgba(2, 132, 199, 0.15);
+}
+
+.nfc-pricing-card.highlighted {
+  border-color: var(--accent);
+  box-shadow: 0 20px 45px -10px rgba(2, 132, 199, 0.25);
+  transform: scale(1.02);
+}
+
+.pricing-ribbon {
+  position: absolute;
+  top: -12px;
+  right: 24px;
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 50px;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+.pricing-header {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.pricing-header h3 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.pricing-material {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.pricing-price-box {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.pricing-price-box .currency {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.pricing-price-box .amount {
+  font-size: 2.75rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.pricing-price-box .original-price {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  margin-left: 0.35rem;
+}
+
+.discount-tag {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-left: 0.5rem;
+}
+
+.pricing-card-preview-mini {
+  width: 100%;
+  height: 165px;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nfc-pricing-card:hover .pricing-card-preview-mini {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.3);
+}
+
+.mini-card-logo img {
+  height: 20px;
+  width: auto;
+}
+
+.pricing-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+  margin-bottom: 2rem;
+  flex: 1;
+}
+
+.pricing-features-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.check-icon {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.pricing-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  border-radius: 50px !important;
+}
+
+/* ==========================================================================
+   4. INTERACTIVE 3-STEP ORDER POPUP MODAL
+   ========================================================================== */
+
+.nfc-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.nfc-modal-container {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 28px;
+  background: transparent;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
+  margin: auto;
+}
+
+/* Modal Close X Button */
+.modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.08);
+}
+
+.modal-box-container {
+  background: #ffffff;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: 28px;
+  padding: 2.75rem 2.25rem;
+}
+
+.order-box-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.order-box-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* 3-Step Progress Stepper Bar */
+.nfc-stepper-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 600px;
+  margin: 1.75rem auto 0 auto;
+  position: relative;
+}
+
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.25s ease;
+}
+
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.step-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.step-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+/* Active & Completed States */
+.stepper-step.active .step-circle {
+  background: var(--gradient);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+  transform: scale(1.06);
+}
+
+.stepper-step.active .step-name {
+  color: var(--accent);
+}
+
+.stepper-step.completed .step-circle {
+  background: #22c55e;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.stepper-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 0.75rem;
+  transition: background 0.3s ease;
+}
+
+.stepper-line.active {
+  background: var(--accent);
+}
+
+/* Error Banner */
+.step-error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Wizard Step Pane */
+.wizard-step-pane {
+  text-align: left;
+}
+
+.wizard-step-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.step-title-icon {
+  color: var(--accent);
+}
+
+.wizard-field-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+}
+
+/* Selected Card Banner in Step 1 */
+.wizard-selected-card-banner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: #f8fafc;
+  border: 1.5px solid rgba(2, 132, 199, 0.2);
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.w-selected-card-swatch {
+  width: 68px;
+  height: 44px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.w-selected-card-info {
+  flex: 1;
+  text-align: left;
+}
+
+.w-selected-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.w-selected-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0 0 2px 0;
+}
+
+.w-selected-mat {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.w-selected-price-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.w-selected-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.w-price-main {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.w-price-cut {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.w-selected-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(2, 132, 199, 0.1);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+/* Inputs layout in wizard */
+.wizard-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.4rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary);
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  background: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+/* Wizard Navigation Actions (Back / Next) */
+.wizard-nav-actions {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+}
+
+.wizard-nav-actions.single-next {
+  justify-content: flex-end;
+}
+
+.wizard-nav-actions.dual-actions {
+  justify-content: space-between;
+}
+
+.wizard-next-btn, .wizard-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.8rem !important;
+  font-size: 0.98rem !important;
+  font-weight: 700 !important;
+  border-radius: 50px !important;
+  box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.4) !important;
+  cursor: pointer;
+}
+
+.wizard-back-btn {
+  padding: 0.85rem 1.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  border-radius: 50px !important;
+  cursor: pointer;
+}
+
+/* STEP 3: Review & Payment */
+.step3-review-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.payment-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 0.85rem 1.15rem;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-option.selected {
+  border-color: var(--accent);
+  background: rgba(2, 132, 199, 0.04);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+}
+
+.payment-option strong {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--primary);
+}
+
+.pay-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.pay-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 6px;
+  color: white;
+}
+
+.bkash-badge { background: #d12053; }
+.nagad-badge { background: #f7941d; }
+.cod-badge { background: #0f172a; }
+
+.mobile-banking-notice {
+  margin-top: 0.85rem;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  padding: 0.95rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  color: var(--text-dark);
+}
+
+/* Step 3 Summary Card Right Side */
+.step3-summary-card {
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 1.35rem;
+}
+
+.summary-card-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.summary-card-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  padding: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.summary-item-swatch {
+  width: 44px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.summary-card-item h5 {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 2px;
+}
+
+.summary-card-item span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.price-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.price-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+.discount-line {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.price-divider {
+  height: 1px;
+  background: rgba(15, 23, 42, 0.08);
+  margin: 0.25rem 0;
+}
+
+.grand-total-line {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.grand-price {
+  font-size: 1.35rem;
+  color: var(--accent);
+}
+
+.delivery-summary-mini {
+  background: #ffffff;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* ==========================================================================
+   GLOWING GREEN TICK SUCCESS SCREEN
+   ========================================================================== */
+
+.order-success-screen {
+  text-align: center;
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+/* Glowing Green Checkmark Circle */
+.green-tick-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 1.25rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.green-tick-glow {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, transparent 70%);
+  animation: tickPulse 2s infinite ease-in-out;
+}
+
+.green-tick-circle {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 15px 35px -5px rgba(34, 197, 94, 0.5),
+    0 0 0 6px rgba(34, 197, 94, 0.15);
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes tickPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.3); opacity: 0.8; }
+}
+
+.green-tick-icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.success-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  padding: 0.35rem 0.9rem;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.success-headline {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--primary);
+  margin-bottom: 0.35rem;
+}
+
+.order-tracking-num {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.order-tracking-num strong {
+  color: var(--accent);
+  font-family: monospace;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+}
+
+.success-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.75rem;
+}
+
+.success-summary-box {
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.75rem;
+  text-align: left;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px dashed rgba(15, 23, 42, 0.08);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row span {
+  color: var(--text-muted);
+}
+
+.summary-row strong {
+  color: var(--primary);
+}
+
+.summary-total-row {
+  padding-top: 0.65rem;
+  font-size: 0.95rem;
+}
+
+.summary-total-amt {
+  font-size: 1.15rem;
+  color: var(--accent);
+}
+
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.whatsapp-confirm-btn {
+  background: #22c55e !important;
+  border-color: #22c55e !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem !important;
+  border-radius: 50px !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.45) !important;
+  cursor: pointer;
+}
+
+.close-done-btn {
+  padding: 0.75rem !important;
+  border-radius: 50px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   5. REVIEWS & TESTIMONIALS
+   ========================================================================== */
+
+.nfc-reviews-section {
+  padding: 5.5rem 0;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.4) 0%, rgba(241, 245, 249, 0.6) 100%);
+  position: relative;
+}
+
+.nfc-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.nfc-review-card {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(2, 132, 199, 0.12);
+  border-radius: 22px;
+  padding: 2.25rem 2rem 1.85rem 2rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 
+    0 12px 32px -10px rgba(15, 23, 42, 0.05),
+    0 2px 6px rgba(15, 23, 42, 0.02);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nfc-review-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(2, 132, 199, 0.35);
+  box-shadow: 
+    0 22px 45px -12px rgba(2, 132, 199, 0.16),
+    0 4px 16px rgba(14, 165, 233, 0.08);
+}
+
+/* Gradient Top Accent Bar */
+.review-card-top-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0284c7, #38bdf8, #818cf8);
+  border-radius: 22px 22px 0 0;
+}
+
+.review-card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.review-stars-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.review-stars {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.review-rating-number {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+
+.review-quote-watermark {
+  color: rgba(2, 132, 199, 0.15);
+  transition: color 0.3s ease;
+}
+
+.nfc-review-card:hover .review-quote-watermark {
+  color: rgba(2, 132, 199, 0.3);
+}
+
+.review-comment {
+  font-size: 0.96rem;
+  color: #334155;
+  line-height: 1.65;
+  font-style: italic;
+  margin-bottom: 1.75rem;
+  flex-grow: 1;
+}
+
+.review-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(241, 245, 249, 0.9);
+  flex-wrap: wrap;
+}
+
+.review-author {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.review-avatar-wrap {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+
+.review-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px #0284c7;
+}
+
+.avatar-verified-dot {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 13px;
+  height: 13px;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.5);
+}
+
+.review-name {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.review-role {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.review-verified-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 0.25rem 0.6rem;
+  border-radius: 50px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   6. FAQS ACCORDION
+   ========================================================================== */
+
+.nfc-faqs-section {
+  padding: 5rem 0;
+}
+
+.nfc-faqs-accordion {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faq-accordion-item {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem 1.75rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: left;
+}
+
+.faq-accordion-item:hover {
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+.faq-accordion-item.expanded {
+  border-color: var(--accent);
+  box-shadow: 0 8px 25px -5px rgba(2, 132, 199, 0.12);
+}
+
+.faq-question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.faq-question-header h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.faq-chevron {
+  color: var(--accent);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.faq-accordion-item.expanded .faq-chevron {
+  transform: rotate(180deg);
+}
+
+.faq-answer-body {
+  padding-top: 1rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  margin-top: 0.85rem;
+}
+
+/* ==========================================================================
+   7. FINAL BOTTOM PROMOTIONAL CTA BANNER
+   ========================================================================== */
+
+.nfc-bottom-cta-section {
+  padding: 3rem 0 6rem 0;
+}
+
+.nfc-bottom-cta-card {
+  background: linear-gradient(135deg, #0f172a 0%, #0284c7 100%);
+  border-radius: 32px;
+  padding: 4rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  color: white;
+  box-shadow: 0 25px 60px -15px rgba(2, 132, 199, 0.4);
+}
+
+.bottom-cta-glow {
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.bottom-cta-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.bottom-cta-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+.bottom-cta-subtitle {
+  font-size: 1.05rem;
+  color: #e0f2fe;
+  line-height: 1.6;
+  margin-bottom: 2.25rem;
+}
+
+.bottom-cta-btn-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Animations */
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN / MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .nfc-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .nfc-hero-content {
+    text-align: center;
+  }
+
+  .nfc-hero-title {
+    font-size: 2.4rem;
+  }
+
+  .nfc-pill-highlights,
+  .nfc-hero-cta-group {
+    justify-content: center;
+  }
+
+  .nfc-steps-grid,
+  .nfc-pricing-grid,
+  .nfc-reviews-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .step3-review-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .nfc-promo-page {
+    padding-top: 85px;
+  }
+
+  .section-title {
+    font-size: 1.95rem;
+  }
+
+  .nfc-hero-title {
+    font-size: 2rem;
+  }
+
+  .nfc-3d-card-wrapper {
+    height: 220px;
+  }
+
+  .slideshow-3d-card-wrapper {
+    height: 205px;
+    max-width: 320px;
+  }
+
+  .slideshow-stage-container {
+    gap: 0.6rem;
+    padding: 1rem 0;
+  }
+
+  .slideshow-nav-arrow {
+    width: 38px;
+    height: 38px;
+  }
+
+  .modal-box-container {
+    padding: 2rem 1.25rem;
+    border-radius: 20px;
+  }
+
+  .nfc-stepper-bar {
+    gap: 0.25rem;
+  }
+
+  .step-name {
+    display: none; /* Hide labels on very compact screens, show numbers */
+  }
+
+  .wizard-inputs-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .wizard-selected-card-banner {
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+
+  .wizard-nav-actions.dual-actions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .wizard-nav-actions.dual-actions button {
+    width: 100%;
+  }
+
+  .nfc-live-text-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-cta-title {
+    font-size: 1.85rem;
+  }
+
+  .dynamic-destinations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dynamic-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dynamic-action-btns {
+    flex-direction: column;
+  }
+
+  .dynamic-action-btns button {
+    width: 100%;
+  }
+
+  .nfc-card-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}

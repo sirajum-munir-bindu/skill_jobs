@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Mail, Users, Loader2, X, Phone } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './RunningAmbassadors.css';
 
 const formatDate = (dateStr) => {
@@ -87,8 +88,8 @@ const RunningAmbassadors = () => {
       setLoading(true);
       try {
         const [configsRes, ambassadorsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/configs'),
-          fetch('http://localhost:5000/api/ambassadors')
+          fetch(`${API_BASE_URL}/api/configs`),
+          fetch(`${API_BASE_URL}/api/ambassadors`)
         ]);
         
         let loadedCampuses = [];
@@ -197,9 +198,9 @@ const RunningAmbassadors = () => {
               <Loader2 className="animate-spin text-gradient" size={40} style={{ animation: 'spin 1s linear infinite' }} />
               <p style={{ color: 'var(--text-muted)' }}>Retrieving chapter directory...</p>
             </div>
-          ) : ambassadors.length > 0 ? (
+          ) : activeAmbassadors.length > 0 ? (
             <div className="ambassador-cards-grid">
-              {ambassadors.map((amb, index) => {
+              {activeAmbassadors.map((amb, index) => {
                 const isApproved = amb.status === 'Approved';
                 return (
                   <motion.div 
@@ -208,10 +209,10 @@ const RunningAmbassadors = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    style={{ borderTop: `4px solid ${isApproved ? '#10b981' : '#f59e0b'}` }}
+                    style={{ borderTop: `4px solid ${isApproved ? '#10b981' : '#0284c7'}` }}
                   >
                     <div className="card-top">
-                      <div className="avatar-image-container" style={{ borderColor: isApproved ? '#10b981' : '#f59e0b' }}>
+                      <div className="avatar-image-container" style={{ borderColor: isApproved ? '#10b981' : '#0284c7' }}>
                         <img 
                           src={amb.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(amb.name)}`} 
                           alt={amb.name} 
@@ -220,8 +221,8 @@ const RunningAmbassadors = () => {
                       </div>
                       <div className="card-identity">
                         <h4>{amb.name}</h4>
-                        <span className="card-designation" style={{ color: isApproved ? '#10b981' : '#f59e0b' }}>
-                          {amb.role || (isApproved ? 'Campus Ambassador' : 'Representative candidate')}
+                        <span className="card-designation" style={{ color: isApproved ? '#059669' : '#0284c7' }}>
+                          {amb.role || 'Campus Ambassador'}
                         </span>
                         {amb.dept && (
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: '500' }}>
@@ -256,9 +257,9 @@ const RunningAmbassadors = () => {
           ) : (
             <div className="empty-directory-card card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
               <Users size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
-              <h3>No Directory Records Yet</h3>
+              <h3>No Active Representatives Yet</h3>
               <p style={{ color: 'var(--text-muted)', maxWidth: '500px', margin: '1rem auto 2rem auto' }}>
-                There are currently no active ambassadors or submitted applications registered for the {uniInfo.fullName} chapter in our database.
+                There are currently no approved ambassadors representing the {uniInfo.fullName} chapter. Apply now to become the official student lead!
               </p>
               <Link to="/ambassador" className="btn btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '10px' }}>
                 Apply to represent your campus
@@ -284,7 +285,7 @@ const RunningAmbassadors = () => {
               </button>
               
               <div className="amb-modal-header-section">
-                <div className="amb-modal-avatar-container" style={{ borderColor: selectedAmbassador.status === 'Approved' ? '#10b981' : '#f59e0b' }}>
+                <div className="amb-modal-avatar-container" style={{ borderColor: selectedAmbassador.status === 'Approved' ? '#10b981' : '#0284c7' }}>
                   <img 
                     src={selectedAmbassador.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(selectedAmbassador.name)}`} 
                     alt={selectedAmbassador.name} 
@@ -293,8 +294,8 @@ const RunningAmbassadors = () => {
                 </div>
                 <div className="amb-modal-identity">
                   <h3>{selectedAmbassador.name}</h3>
-                  <span className="amb-modal-designation" style={{ color: selectedAmbassador.status === 'Approved' ? '#10b981' : '#f59e0b' }}>
-                    {selectedAmbassador.role || (selectedAmbassador.status === 'Approved' ? 'Campus Ambassador' : 'Representative candidate')}
+                  <span className="amb-modal-designation" style={{ color: selectedAmbassador.status === 'Approved' ? '#059669' : '#0284c7' }}>
+                    {selectedAmbassador.role || 'Campus Ambassador'}
                   </span>
                   <a href={`mailto:${selectedAmbassador.email}`} className="amb-modal-email">
                     <Mail size={13} style={{ display: 'inline', marginRight: '0.3rem', verticalAlign: 'middle' }} /> {selectedAmbassador.email}
@@ -325,23 +326,34 @@ const RunningAmbassadors = () => {
                   </div>
                   <div className="amb-modal-meta-item">
                     <span>Chapter Status</span>
-                    <strong style={{ color: selectedAmbassador.status === 'Approved' ? '#10b981' : '#f59e0b' }}>
+                    <strong style={{ color: selectedAmbassador.status === 'Approved' ? '#059669' : '#b45309' }}>
                       {selectedAmbassador.status === 'Approved' ? 'Active Lead' : 'Pending Review'}
                     </strong>
                   </div>
                 </div>
 
-                <div className="amb-modal-essay">
-                  <h4>Motivation Statement</h4>
-                  <p>{selectedAmbassador.reason}</p>
-                </div>
+                {selectedAmbassador.reason && (
+                  <div className="amb-modal-essay">
+                    <h4>Motivation Statement</h4>
+                    <p>{selectedAmbassador.reason}</p>
+                  </div>
+                )}
 
-                <button 
-                  className="amb-modal-action-close-btn" 
-                  onClick={() => setSelectedAmbassador(null)} 
-                >
-                  Close Profile
-                </button>
+                <div className="amb-modal-actions-wrap">
+                  <button 
+                    className="amb-modal-action-close-btn" 
+                    onClick={() => setSelectedAmbassador(null)} 
+                  >
+                    Close Profile
+                  </button>
+                  <Link 
+                    to="/dashboard" 
+                    className="amb-modal-action-dashboard-btn"
+                    style={{ background: uniInfo.color || '#0284c7', borderColor: uniInfo.color || '#0284c7' }}
+                  >
+                    Dashboard Access
+                  </Link>
+                </div>
               </div>
             </motion.div>
           </div>

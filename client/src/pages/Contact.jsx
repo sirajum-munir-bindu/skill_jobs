@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, MessageCircle, Globe, Camera, CheckCircle, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './Contact.css';
 
 const Contact = () => {
@@ -29,7 +30,7 @@ const Contact = () => {
   useEffect(() => {
     const fetchConfigs = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/configs');
+        const res = await fetch(`${API_BASE_URL}/api/configs`);
         if (res.ok) {
           const data = await res.json();
           if (data.contact) {
@@ -55,7 +56,7 @@ const Contact = () => {
     setStatus({ submitting: true, success: false, error: null });
 
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

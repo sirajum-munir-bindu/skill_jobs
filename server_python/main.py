@@ -1,12 +1,14 @@
+import os
 import time
 import random
 import string
 import json
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from bson import ObjectId
+from sqlalchemy import or_, func
 
 from database import (
     get_db_connection,
@@ -18,7 +20,9 @@ from database import (
     SQLAmbassador,
     SQLMessage,
     SQLConfig,
-    SQLUser
+    SQLUser,
+    SQLWorkReport,
+    SQLNfcOrder
 )
 from models import (
     format_doc,
@@ -29,8 +33,16 @@ from models import (
     UserRegisterModel,
     UserLoginModel,
     UserUpdateModel,
+    AdminUserCreateModel,
+    AdminUserUpdateModel,
     ConfigModel,
-    MessageModel
+    MessageModel,
+    WorkReportModel,
+    WorkReportUpdateModel,
+    WorkReportStatusModel,
+    BulkDeleteUsersModel,
+    NfcOrderModel,
+    NfcOrderStatusModel
 )
 
 
@@ -45,14 +57,25 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Skill Jobs API (Python)", lifespan=lifespan)
 
 # CORS Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+if allowed_origins_env.strip() == "*":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r"^https?:\/\/.*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    cors_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+# Health check and root route
 
 @app.get("/")
 def root():
@@ -341,16 +364,24 @@ def register_user(reg_data: UserRegisterModel):
 
 
 @app.post("/api/auth/login")
+@app.post("/api/users/login")
 def login_user(login_data: UserLoginModel):
+    clean_email = login_data.email.strip().lower()
     if get_db_connection():
         db = get_db_session()
         if db:
             try:
-                user = db.query(SQLUser).filter(SQLUser.email == login_data.email).first()
+                user = db.query(SQLUser).filter(func.lower(SQLUser.email) == clean_email).first()
                 if user and user.password == login_data.password:
-                    return {"message": "Login successful", "user": format_doc(user)}
+                    doc = format_doc(user)
+                    if isinstance(doc.get("permissions"), str):
+                        try:
+                            doc["permissions"] = json.loads(doc["permissions"])
+                        except Exception:
+                            doc["permissions"] = []
+                    return {"message": "Login successful", "user": doc}
                 else:
-                    raise HTTPException(status_code=401, detail="Invalid email or password")
+                    raise HTTPException(status_code=401, detail="Invalid administrator email or password.")
             except HTTPException:
                 raise
             except Exception as err:
@@ -362,10 +393,10 @@ def login_user(login_data: UserLoginModel):
     # Fallback local
     users = local_db.get("users", [])
     for u in users:
-        if u.get("email") == login_data.email and u.get("password") == login_data.password:
+        if u.get("email", "").strip().lower() == clean_email and u.get("password") == login_data.password:
             return {"message": "Login successful locally", "user": u}
             
-    raise HTTPException(status_code=401, detail="Invalid email or password")
+    raise HTTPException(status_code=401, detail="Invalid administrator email or password.")
 
 
 @app.put("/api/auth/update")
@@ -416,6 +447,227 @@ def update_user(update_data: UserUpdateModel):
             return {"message": "Profile updated locally", "user": users[idx]}
             
     raise HTTPException(status_code=404, detail="User not found")
+
+
+# ==============================================================================
+# USERS CRUD (ADMIN MANAGEMENT)
+# ==============================================================================
+
+@app.get("/api/users")
+def get_all_users():
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                users = db.query(SQLUser).order_by(SQLUser.createdAt.desc()).all()
+                result = []
+                for u in users:
+                    d = format_doc(u)
+                    if isinstance(d.get("permissions"), str):
+                        try:
+                            d["permissions"] = json.loads(d["permissions"])
+                        except Exception:
+                            d["permissions"] = []
+                    result.append(d)
+                return result
+            except Exception as err:
+                print(f"Database error fetching users: {err}")
+            finally:
+                db.close()
+
+    # Fallback local
+    return local_db.get("users", [])
+
+
+@app.post("/api/users", status_code=status.HTTP_201_CREATED)
+def admin_create_user(user_data: AdminUserCreateModel):
+    now_str = datetime.now().isoformat()
+    new_id = f"usr_{int(time.time()*1000)}"
+    perm_list = user_data.permissions if user_data.permissions is not None else [
+        "users", "ambassadors", "ambassadortasks", "ambassadordashboard", 
+        "homepage", "aboutpage", "ambassadorpage", "contactpage", "contactmessages"
+    ]
+
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                existing = db.query(SQLUser).filter(SQLUser.email == user_data.email).first()
+                if existing:
+                    raise HTTPException(status_code=400, detail="Email is already in use.")
+
+                sql_user = SQLUser(
+                    id=new_id,
+                    name=user_data.name,
+                    email=user_data.email,
+                    password=user_data.password,
+                    role=user_data.role or "Participant",
+                    permissions=json.dumps(perm_list),
+                    createdAt=now_str
+                )
+                db.add(sql_user)
+                db.commit()
+                db.refresh(sql_user)
+                doc = format_doc(sql_user)
+                doc["permissions"] = perm_list
+                return {"message": "User created successfully!", "user": doc}
+            except HTTPException:
+                raise
+            except Exception as err:
+                db.rollback()
+                print(f"Database error creating user: {err}")
+                raise HTTPException(status_code=500, detail="Database insertion failed.")
+            finally:
+                db.close()
+
+    # Fallback local
+    users = local_db.get("users", [])
+    if any(u.get("email") == user_data.email for u in users):
+        raise HTTPException(status_code=400, detail="Email is already in use.")
+
+    new_user = {
+        "_id": new_id,
+        "name": user_data.name,
+        "email": user_data.email,
+        "password": user_data.password,
+        "role": user_data.role or "Participant",
+        "permissions": perm_list,
+        "createdAt": now_str
+    }
+    local_db.setdefault("users", []).append(new_user)
+    save_local_database()
+    return {"message": "User created successfully!", "user": new_user}
+
+
+@app.put("/api/users/{id}")
+def admin_update_user(id: str, update_data: AdminUserUpdateModel):
+    clean_email = update_data.email.strip().lower()
+    
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                user = db.query(SQLUser).filter(or_(SQLUser.id == id, func.lower(SQLUser.email) == clean_email)).first()
+                if user:
+                    if user.email.strip().lower() != clean_email:
+                        existing = db.query(SQLUser).filter(func.lower(SQLUser.email) == clean_email, SQLUser.id != user.id).first()
+                        if existing:
+                            raise HTTPException(status_code=400, detail="Email is already in use by another user.")
+
+                    user.name = update_data.name
+                    user.email = update_data.email
+                    if update_data.role:
+                        user.role = update_data.role
+                    if update_data.password and update_data.password.strip():
+                        user.password = update_data.password.strip()
+                        amb = db.query(SQLAmbassador).filter(func.lower(SQLAmbassador.email) == clean_email).first()
+                        if amb:
+                            amb.password = update_data.password.strip()
+                    if update_data.permissions is not None:
+                        user.permissions = json.dumps(update_data.permissions)
+
+                    db.commit()
+                    db.refresh(user)
+                    doc = format_doc(user)
+                    if isinstance(doc.get("permissions"), str):
+                        try:
+                            doc["permissions"] = json.loads(doc["permissions"])
+                        except Exception:
+                            pass
+                    return {"message": "User updated successfully!", "user": doc}
+            except HTTPException:
+                raise
+            except Exception as err:
+                db.rollback()
+                print(f"Database error updating user: {err}")
+            finally:
+                db.close()
+
+    # Fallback local
+    users = local_db.get("users", [])
+    for idx, u in enumerate(users):
+        if str(u.get("_id")) == id or str(u.get("id")) == id or u.get("email", "").strip().lower() == clean_email:
+            if u.get("email", "").strip().lower() != clean_email:
+                if any(str(o.get("_id", o.get("id"))) != id and o.get("email", "").strip().lower() == clean_email for o in users):
+                    raise HTTPException(status_code=400, detail="Email is already in use by another user.")
+
+            users[idx]["name"] = update_data.name
+            users[idx]["email"] = update_data.email
+            if update_data.role:
+                users[idx]["role"] = update_data.role
+            if update_data.password and update_data.password.strip():
+                users[idx]["password"] = update_data.password.strip()
+                for amb in local_db.get("ambassadors", []):
+                    if amb.get("email", "").strip().lower() == clean_email:
+                        amb["password"] = update_data.password.strip()
+            if update_data.permissions is not None:
+                users[idx]["permissions"] = update_data.permissions
+
+            save_local_database()
+            return {"message": "User updated successfully!", "user": users[idx]}
+
+    raise HTTPException(status_code=404, detail="User not found.")
+
+
+@app.delete("/api/users/{id}")
+def admin_delete_user(id: str):
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                user = db.query(SQLUser).filter(SQLUser.id == id).first()
+                if not user:
+                    raise HTTPException(status_code=404, detail="User not found.")
+
+                db.delete(user)
+                db.commit()
+                return {"message": "User deleted successfully."}
+            except HTTPException:
+                raise
+            except Exception as err:
+                db.rollback()
+                print(f"Database error deleting user: {err}")
+                raise HTTPException(status_code=500, detail="Database deletion failed.")
+            finally:
+                db.close()
+
+    # Fallback local
+    users = local_db.get("users", [])
+    initial_len = len(users)
+    local_db["users"] = [u for u in users if str(u.get("_id")) != id and str(u.get("id")) != id]
+    if len(local_db["users"]) < initial_len:
+        save_local_database()
+        return {"message": "User deleted successfully."}
+
+    raise HTTPException(status_code=404, detail="User not found.")
+
+
+@app.post("/api/users/bulk-delete")
+def admin_bulk_delete_users(data: BulkDeleteUsersModel):
+    ids_to_delete = set(str(i) for i in data.userIds)
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                users = db.query(SQLUser).filter(SQLUser.id.in_(ids_to_delete)).all()
+                deleted_count = len(users)
+                for u in users:
+                    db.delete(u)
+                db.commit()
+                return {"message": f"{deleted_count} user accounts deleted successfully.", "deletedCount": deleted_count}
+            except Exception as err:
+                db.rollback()
+                print(f"Database error bulk deleting users: {err}")
+            finally:
+                db.close()
+
+    # Fallback local
+    users = local_db.get("users", [])
+    initial_len = len(users)
+    local_db["users"] = [u for u in users if str(u.get("_id")) not in ids_to_delete and str(u.get("id")) not in ids_to_delete]
+    deleted_count = initial_len - len(local_db["users"])
+    save_local_database()
+    return {"message": f"{deleted_count} user accounts deleted successfully.", "deletedCount": deleted_count}
 
 
 @app.patch("/api/ambassadors/{id}")
@@ -676,3 +928,320 @@ def delete_message(id: str):
             return {"message": "Message deleted locally!", "contactMessage": deleted_local}
 
     raise HTTPException(status_code=404, detail="Message not found.")
+
+
+# ==============================================================================
+# WORK REPORTS (AMBASSADOR SUBMISSIONS)
+# ==============================================================================
+
+@app.get("/api/work-reports")
+def get_work_reports(ambassadorEmail: Optional[str] = None):
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                query = db.query(SQLWorkReport)
+                if ambassadorEmail:
+                    query = query.filter(SQLWorkReport.ambassadorEmail == ambassadorEmail)
+                reports = query.order_by(SQLWorkReport.createdAt.desc()).all()
+                return [format_doc(r) for r in reports]
+            except Exception as err:
+                print(f"Error fetching SQL work reports: {err}")
+            finally:
+                db.close()
+
+    reports = local_db.get("workReports", [])
+    if ambassadorEmail:
+        return [r for r in reports if r.get("ambassadorEmail") == ambassadorEmail]
+    return reports
+
+
+@app.post("/api/work-reports")
+def create_work_report(report_data: WorkReportModel):
+    new_id = f"wr_{int(time.time() * 1000)}"
+    created_at = report_data.createdAt or datetime.now().isoformat()
+    
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                sql_report = SQLWorkReport(
+                    id=new_id,
+                    ambassadorEmail=report_data.ambassadorEmail or "",
+                    ambassadorName=report_data.ambassadorName or "",
+                    name=report_data.name,
+                    email=report_data.email,
+                    phone=report_data.phone,
+                    institution=report_data.institution or "Campus Member",
+                    status=report_data.status or "Pending",
+                    createdAt=created_at
+                )
+                db.add(sql_report)
+                db.commit()
+                db.refresh(sql_report)
+                return {"message": "Work report entry created successfully!", "workReport": format_doc(sql_report)}
+            except Exception as err:
+                db.rollback()
+                print(f"Error creating SQL work report: {err}")
+            finally:
+                db.close()
+
+    new_report = {
+        "_id": new_id,
+        "ambassadorEmail": report_data.ambassadorEmail or "",
+        "ambassadorName": report_data.ambassadorName or "",
+        "name": report_data.name,
+        "email": report_data.email,
+        "phone": report_data.phone,
+        "institution": report_data.institution or "Campus Member",
+        "status": report_data.status or "Pending",
+        "createdAt": created_at
+    }
+    if "workReports" not in local_db:
+        local_db["workReports"] = []
+    local_db["workReports"].insert(0, new_report)
+    save_local_database()
+    return {"message": "Work report entry created successfully!", "workReport": new_report}
+
+
+@app.put("/api/work-reports/{id}")
+def update_work_report(id: str, update_data: WorkReportUpdateModel):
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                report = db.query(SQLWorkReport).filter(SQLWorkReport.id == id).first()
+                if report:
+                    if update_data.name is not None:
+                        report.name = update_data.name
+                    if update_data.email is not None:
+                        report.email = update_data.email
+                    if update_data.phone is not None:
+                        report.phone = update_data.phone
+                    if update_data.institution is not None:
+                        report.institution = update_data.institution
+                    if update_data.status is not None:
+                        report.status = update_data.status
+                    db.commit()
+                    db.refresh(report)
+                    return {"message": "Work report entry updated successfully!", "workReport": format_doc(report)}
+            except Exception as err:
+                db.rollback()
+                print(f"Error updating SQL work report: {err}")
+            finally:
+                db.close()
+
+    reports = local_db.get("workReports", [])
+    for idx, r in enumerate(reports):
+        if str(r.get("_id")) == id or str(r.get("id")) == id:
+            if update_data.name is not None:
+                reports[idx]["name"] = update_data.name
+            if update_data.email is not None:
+                reports[idx]["email"] = update_data.email
+            if update_data.phone is not None:
+                reports[idx]["phone"] = update_data.phone
+            if update_data.institution is not None:
+                reports[idx]["institution"] = update_data.institution
+            if update_data.status is not None:
+                reports[idx]["status"] = update_data.status
+            save_local_database()
+            return {"message": "Work report entry updated successfully!", "workReport": reports[idx]}
+    raise HTTPException(status_code=404, detail="Work report entry not found.")
+
+
+@app.patch("/api/work-reports/{id}/status")
+@app.put("/api/work-reports/{id}/status")
+def update_work_report_status(id: str, status_data: WorkReportStatusModel):
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                report = db.query(SQLWorkReport).filter(SQLWorkReport.id == id).first()
+                if report:
+                    report.status = status_data.status
+                    db.commit()
+                    db.refresh(report)
+                    return {"message": f"Work report status updated to {status_data.status}!", "workReport": format_doc(report)}
+            except Exception as err:
+                db.rollback()
+                print(f"Error updating SQL work report status: {err}")
+            finally:
+                db.close()
+
+    reports = local_db.get("workReports", [])
+    for idx, r in enumerate(reports):
+        if str(r.get("_id")) == id or str(r.get("id")) == id:
+            reports[idx]["status"] = status_data.status
+            save_local_database()
+            return {"message": f"Work report status updated to {status_data.status}!", "workReport": reports[idx]}
+    raise HTTPException(status_code=404, detail="Work report entry not found.")
+
+
+@app.delete("/api/work-reports/{id}")
+def delete_work_report(id: str):
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                report = db.query(SQLWorkReport).filter(SQLWorkReport.id == id).first()
+                if report:
+                    formatted = format_doc(report)
+                    db.delete(report)
+                    db.commit()
+                    return {"message": "Work report entry deleted successfully!", "workReport": formatted}
+            except Exception as err:
+                db.rollback()
+                print(f"Error deleting SQL work report: {err}")
+            finally:
+                db.close()
+
+    reports = local_db.get("workReports", [])
+    for idx, r in enumerate(reports):
+        if str(r.get("_id")) == id or str(r.get("id")) == id:
+            deleted_report = local_db["workReports"].pop(idx)
+            save_local_database()
+            return {"message": "Work report entry deleted successfully!", "workReport": deleted_report}
+    raise HTTPException(status_code=404, detail="Work report entry not found.")
+
+
+# ==============================================================================
+# NFC CARD ORDERS / APPLICATIONS ROUTES
+# ==============================================================================
+
+@app.get("/api/nfc-orders")
+def get_nfc_orders():
+    """Retrieve all NFC card applications/orders (newest first)."""
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                orders = db.query(SQLNfcOrder).order_by(SQLNfcOrder.createdAt.desc()).all()
+                return [format_doc(o) for o in orders]
+            except Exception as err:
+                print(f"Database error fetching NFC orders: {err}")
+            finally:
+                db.close()
+
+    # Fallback to local
+    orders = local_db.get("nfcOrders", [])
+    return sorted(orders, key=lambda x: str(x.get("createdAt", "")), reverse=True)
+
+
+@app.post("/api/nfc-orders")
+def create_nfc_order(order_data: NfcOrderModel):
+    """Submit a new NFC card application/order."""
+    new_id = order_data.id if (order_data.id and order_data.id.strip()) else f"NFC-{random.randint(100000, 999999)}"
+    now_iso = order_data.createdAt if order_data.createdAt else datetime.now().isoformat()
+
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                sql_order = SQLNfcOrder(
+                    id=new_id,
+                    customerName=order_data.customerName,
+                    customerEmail=order_data.customerEmail,
+                    customerPhone=order_data.customerPhone,
+                    deliveryAddress=order_data.deliveryAddress,
+                    district=order_data.district or "Dhaka",
+                    cardVariantId=order_data.cardVariantId,
+                    cardVariantName=order_data.cardVariantName,
+                    customNameOnCard=order_data.customNameOnCard,
+                    customRoleOnCard=order_data.customRoleOnCard,
+                    customOrgOnCard=order_data.customOrgOnCard,
+                    paymentMethod=order_data.paymentMethod or "bkash",
+                    trxId=order_data.trxId or "",
+                    ambassadorCode=order_data.ambassadorCode or "",
+                    notes=order_data.notes or "",
+                    quantity=str(order_data.quantity or 1),
+                    unitPrice=str(order_data.unitPrice or 0),
+                    subtotal=str(order_data.subtotal or 0),
+                    deliveryCharge=str(order_data.deliveryCharge or 0),
+                    discountAmount=str(order_data.discountAmount or 0),
+                    grandTotal=str(order_data.grandTotal or 0),
+                    status=order_data.status or "Pending",
+                    createdAt=now_iso
+                )
+                db.add(sql_order)
+                db.commit()
+                db.refresh(sql_order)
+                return {"message": "NFC order placed successfully!", "order": format_doc(sql_order), "orderId": new_id}
+            except Exception as err:
+                db.rollback()
+                print(f"Database error saving NFC order: {err}")
+            finally:
+                db.close()
+
+    # Local fallback
+    if "nfcOrders" not in local_db:
+        local_db["nfcOrders"] = []
+    
+    order_dict = order_data.model_dump()
+    order_dict["id"] = new_id
+    order_dict["_id"] = new_id
+    order_dict["createdAt"] = now_iso
+    local_db["nfcOrders"].insert(0, order_dict)
+    save_local_database()
+    return {"message": "NFC order placed successfully (local fallback)!", "order": order_dict, "orderId": new_id}
+
+
+@app.put("/api/nfc-orders/{order_id}/status")
+def update_nfc_order_status(order_id: str, status_data: NfcOrderStatusModel):
+    """Update status of an NFC order (Pending, Processing, Shipped, Delivered, Cancelled)."""
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                order = db.query(SQLNfcOrder).filter(SQLNfcOrder.id == order_id).first()
+                if order:
+                    order.status = status_data.status
+                    db.commit()
+                    db.refresh(order)
+                    return {"message": "Order status updated successfully!", "order": format_doc(order)}
+            except Exception as err:
+                db.rollback()
+                print(f"Database error updating NFC order status: {err}")
+            finally:
+                db.close()
+
+    # Local fallback
+    orders = local_db.get("nfcOrders", [])
+    for o in orders:
+        if str(o.get("id")) == order_id or str(o.get("_id")) == order_id:
+            o["status"] = status_data.status
+            save_local_database()
+            return {"message": "Order status updated locally!", "order": o}
+
+    raise HTTPException(status_code=404, detail="NFC Order not found.")
+
+
+@app.delete("/api/nfc-orders/{order_id}")
+def delete_nfc_order(order_id: str):
+    """Delete an NFC order."""
+    if get_db_connection():
+        db = get_db_session()
+        if db:
+            try:
+                order = db.query(SQLNfcOrder).filter(SQLNfcOrder.id == order_id).first()
+                if order:
+                    formatted = format_doc(order)
+                    db.delete(order)
+                    db.commit()
+                    return {"message": "NFC order deleted successfully!", "order": formatted}
+            except Exception as err:
+                db.rollback()
+                print(f"Database error deleting NFC order: {err}")
+            finally:
+                db.close()
+
+    # Local fallback
+    orders = local_db.get("nfcOrders", [])
+    for idx, o in enumerate(orders):
+        if str(o.get("id")) == order_id or str(o.get("_id")) == order_id:
+            deleted = local_db["nfcOrders"].pop(idx)
+            save_local_database()
+            return {"message": "NFC order deleted locally!", "order": deleted}
+
+    raise HTTPException(status_code=404, detail="NFC Order not found.")
+
+
