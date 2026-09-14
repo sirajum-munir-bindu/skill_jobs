@@ -1013,59 +1013,149 @@
 }
 
 /* ==========================================================================
-   UPDATED RESPONSIVE RULES FOR NEW MODULES
+   UPDATED MOBILE RESPONSIVE RULES (TABLET, MOBILE, COMPACT PHONES)
    ========================================================================== */
 @media (max-width: 992px) {
   .stats-counter-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 3rem 2rem;
+    gap: 2.5rem 1.5rem;
   }
   
   .path-detail-grid {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hero spacing on tablets & mobile */
+  .skills-hero {
+    padding: 7.5rem 0 3.5rem;
+    min-height: auto;
+  }
+
+  .skills-hero .hero-title-large {
+    font-size: 2.65rem;
+    line-height: 1.18;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-subtitle-centered {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2.25rem;
+    padding: 0 0.5rem;
+  }
+
+  /* Prevent decorative floating icons from causing overflow on mobile */
+  .hero-decorations {
+    display: none !important;
+  }
+
+  /* Disable heavy cursor glow and runtime video filters on mobile GPU */
+  .cursor-glow-sphere {
+    display: none !important;
+  }
+
+  .hero-video-bg {
+    filter: none;
+  }
+
+  /* 2x2 App-Style Dashboard Grid for Statistics */
+  .stats-counter-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 1rem;
+  }
+
+  .stat-counter-item {
+    padding: 1.25rem 0.75rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(2, 132, 199, 0.08);
+  }
+
+  .stat-number {
+    font-size: 2.2rem;
+  }
+
+  .stat-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  /* Touch-friendly horizontal scroll tabs for learning paths */
+  .path-tabs-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 0.65rem;
+    padding: 0.25rem 0.25rem 0.85rem;
+    scrollbar-width: none;
+    justify-content: flex-start;
+  }
+
+  .path-tabs-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .path-tab-btn {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    white-space: nowrap;
+    width: auto;
+    padding: 0.7rem 1.25rem;
+    font-size: 0.92rem;
+  }
+
+  .path-detail-card {
+    padding: 2rem 1.5rem;
   }
 }
 
 @media (max-width: 576px) {
-  .hero-title-large {
-    font-size: 2.1rem;
+  .skills-hero {
+    padding: 6.5rem 0 3rem;
+  }
+
+  .skills-hero .hero-title-large {
+    font-size: 2.15rem;
+  }
+
+  .hero-subtitle-centered {
+    font-size: 0.98rem;
+    line-height: 1.55;
+    margin-bottom: 2rem;
   }
 
   .hero-buttons-centered {
     flex-direction: column;
     width: 100%;
-    gap: 1rem;
-    padding: 0 0.5rem;
+    gap: 0.85rem;
+    padding: 0;
   }
 
   .hero-buttons-centered .btn {
     width: 100%;
+    min-height: 48px;
     justify-content: center;
+    font-size: 0.95rem;
+    padding: 0.85rem 1.5rem;
   }
 
   .stats-counter-grid {
-    grid-template-columns: 1fr;
-    gap: 2.25rem;
-  }
-  
-  .stat-number {
-    font-size: 2.5rem;
-  }
-  
-  .path-tabs-container {
-    flex-direction: column;
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
   }
 
-  .path-tab-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 0.85rem 1.25rem;
+  .stat-number {
+    font-size: 1.95rem;
   }
-  
+
   .path-detail-card {
-    padding: 1.5rem 1.25rem;
+    padding: 1.5rem 1.15rem;
+    border-radius: 16px;
   }
 
   .path-detail-header {
@@ -1073,58 +1163,69 @@
     align-items: flex-start;
     gap: 0.85rem;
   }
-  
+
   .quiz-card {
-    padding: 1.5rem 1.25rem !important;
+    padding: 1.75rem 1.25rem !important;
+    border-radius: 16px !important;
   }
 
   .quiz-q-title {
     font-size: 1.25rem;
+    line-height: 1.35;
   }
-  
+
+  .quiz-option-btn {
+    padding: 0.9rem 1.15rem;
+    min-height: 48px;
+    gap: 0.85rem;
+  }
+
   .result-match-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .result-actions {
     flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
   }
 
   .result-actions .btn {
     width: 100%;
-    flex: none;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Disable heavy cursor glow and runtime video filters on mobile GPU */
-  .cursor-glow-sphere {
-    display: none !important;
-  }
-  .hero-video-bg {
-    filter: none;
+    min-height: 48px;
+    justify-content: center;
   }
 }
 
 @media (max-width: 400px) {
-  .hero-title-large {
-    font-size: 1.75rem;
+  .skills-hero .hero-title-large {
+    font-size: 1.85rem;
   }
 
   .badge-pill {
     font-size: 0.72rem;
-    padding: 0.35rem 0.9rem;
+    padding: 0.35rem 0.85rem;
+  }
+
+  .stat-number {
+    font-size: 1.75rem;
+  }
+
+  .stat-title {
+    font-size: 0.76rem;
   }
 
   .path-detail-card,
   .quiz-card {
-    padding: 1.25rem 1rem !important;
+    padding: 1.25rem 0.95rem !important;
   }
 
-  .stat-number {
-    font-size: 2.1rem;
+  .quiz-icon-large {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1.25rem;
   }
 }
 

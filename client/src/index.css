@@ -235,6 +235,16 @@ button {
   .container { padding: 0 1.25rem; }
   .card { padding: 1.75rem 1.35rem; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+
+  /* Prevent automatic iOS Safari zoom when tapping form inputs */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Optimize touch responsiveness and tap targets */
+  .btn, button, a {
+    touch-action: manipulation;
+  }
 }
 
 @media (max-width: 576px) {
