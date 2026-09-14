@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, Award, BookOpen, ArrowRight, Quote, 
@@ -63,14 +63,19 @@ const renderIcon = (iconName, size = 28) => {
 
 const Home = () => {
   const [events, setEvents] = useState([]);
-  // Homepage Configurations state with default fallbacks
-  const [configs, setConfigs] = useState({
-    hero: {
-      badge: "Welcome to Skill Jobs",
-      titleMain: "Shape Your Future with",
-      titleGradient: "Professional Skills & Mentorship",
-      videoUrl: "/hero-bg.mp4"
-    },
+  // Homepage Configurations state with default fallbacks and instant localStorage cache
+  const [configs, setConfigs] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_site_configs');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return {
+      hero: {
+        badge: "Welcome to Skill Jobs",
+        titleMain: "Shape Your Future with",
+        titleGradient: "Professional Skills & Mentorship",
+        videoUrl: "/hero-bg.mp4"
+      },
     stats: {
       studentsTrained: 5000,
       expertMentors: 120,
@@ -245,6 +250,7 @@ const Home = () => {
       btn2Text: "Contact Advisors",
       btn2Link: "/contact"
     }
+  };
   });
 
 
@@ -258,6 +264,9 @@ const Home = () => {
             ...prev,
             ...data
           }));
+          try {
+            localStorage.setItem('cached_site_configs', JSON.stringify(data));
+          } catch {}
         }
       } catch (err) {
         console.warn('Failed to fetch configurations:', err);
@@ -272,13 +281,16 @@ const Home = () => {
     setActiveFaq(activeFaq === idx ? null : idx);
   };
 
-  // 2. Cursor Glow Follower State
-  const [mousePos, setMousePos] = useState({ x: -150, y: -150 });
+  // 2. Cursor Glow Follower Ref (direct DOM update without triggering React re-renders)
+  const glowRef = useRef(null);
   useEffect(() => {
+    if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
     const handleMouseMove = (e) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      if (glowRef.current) {
+        glowRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
     };
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
@@ -353,10 +365,13 @@ const Home = () => {
     <div className="home skills-theme">
       {/* 3D Cursor Glow Follower Spotlight */}
       <div 
+        ref={glowRef}
         className="cursor-glow-sphere" 
         style={{ 
-          left: `${mousePos.x}px`, 
-          top: `${mousePos.y}px` 
+          position: 'fixed',
+          left: 0, 
+          top: 0,
+          pointerEvents: 'none'
         }} 
       />
 

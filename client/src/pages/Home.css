@@ -1098,6 +1098,16 @@
   }
 }
 
+@media (max-width: 768px) {
+  /* Disable heavy cursor glow and runtime video filters on mobile GPU */
+  .cursor-glow-sphere {
+    display: none !important;
+  }
+  .hero-video-bg {
+    filter: none;
+  }
+}
+
 @media (max-width: 400px) {
   .hero-title-large {
     font-size: 1.75rem;
@@ -1117,4 +1127,5 @@
     font-size: 2.1rem;
   }
 }
+
 
