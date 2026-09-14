@@ -381,7 +381,9 @@ const Home = () => {
             autoPlay 
             loop 
             muted 
-            playsInline 
+            playsInline
+            preload="auto"
+            poster="/hero.png"
             className="hero-video-bg"
           >
             <source src={configs.hero.videoUrl} type={configs.hero.videoUrl?.startsWith('data:video/') ? undefined : "video/mp4"} />
