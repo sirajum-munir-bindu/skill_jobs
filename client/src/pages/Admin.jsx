@@ -30,7 +30,6 @@ const AVAILABLE_PERMISSIONS = [
   { id: 'ambassadors', label: 'Ambassador Applications', desc: 'Review, approve, and reject candidate applications', group: 'Management' },
   { id: 'ambassadordashboard', label: 'Ambassador Dashboard', desc: 'View all accounts created across ambassadors', group: 'Management' },
   { id: 'ambassadortasks', label: 'Ambassador Tasks & Targets', desc: 'Configure daily targets, bounty rates, and incentives', group: 'Management' },
-  { id: 'nfc_cards', label: 'NFC Smart Cards Management', desc: 'Add, edit, and manage NFC cards in the system and public store', group: 'Management' },
   { id: 'ambassador_performance', label: 'Ambassador Performance Hub', desc: 'Grant ambassador access to view daily & monthly KPI matrix, target runs, and performance cycle', group: 'Ambassador Role Management' },
   { id: 'ambassador_workreport', label: 'Ambassador Work Report Submission', desc: 'Grant ambassador access to submit candidate registrations, account logs, and manage work reports', group: 'Ambassador Role Management' },
   { id: 'homepage', label: 'Homepage Content (CMS)', desc: 'Edit hero banner, stats counter, FAQs, and courses', group: 'Website Configuration' },
@@ -1012,6 +1011,7 @@ const Admin = () => {
 
   const handleSaveConfig = async (key, value) => {
     try {
+      showToast(`Saving '${key}' section to database...`, 'info');
       const response = await fetch(`${API_BASE_URL}/api/configs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1022,13 +1022,15 @@ const Admin = () => {
         showToast(`Homepage section '${key}' saved successfully!`, 'success');
         fetchData();
       } else {
-        showToast('Failed to save configurations.', 'error');
+        const errData = await response.json().catch(() => null);
+        showToast(errData?.detail || 'Failed to save configurations.', 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast('Network error saving configuration.', 'error');
+      showToast('Network error saving configuration. Payload might be too large.', 'error');
     }
   };
+
 
   useEffect(() => {
     if (isUnlocked) {
@@ -1178,10 +1180,9 @@ const Admin = () => {
 
   // Convert uploaded hero background media file (image/video) to Base64 string for DB storage
   const handleHeroMediaFile = (file) => {
-    // MongoDB BSON limit is 16MB. Safe limit is 10MB to account for Base64 overhead (which adds ~33% size)
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
     if (file.size > MAX_SIZE) {
-      showToast('Background media file size must be under 10MB.', 'error');
+      showToast('Background media file size must be under 50MB.', 'error');
       return;
     }
 
@@ -1191,6 +1192,7 @@ const Admin = () => {
       return;
     }
 
+    showToast('Loading media file...', 'info');
     const reader = new FileReader();
     reader.onload = (e) => {
       setHomepageConfigs(prev => ({
@@ -1204,6 +1206,7 @@ const Admin = () => {
     };
     reader.readAsDataURL(file);
   };
+
 
   // Convert uploaded Who We Are image file to Base64 string for DB storage
   const handleAboutWhoWeAreImageFile = (file) => {
@@ -1821,7 +1824,7 @@ const Admin = () => {
           )}
 
           {/* Management */}
-          {(hasPermission('users') || hasPermission('ambassadors') || hasPermission('ambassadordashboard') || hasPermission('ambassadortasks') || hasPermission('nfc_cards')) && (
+          {(hasPermission('users') || hasPermission('ambassadors') || hasPermission('ambassadordashboard') || hasPermission('ambassadortasks')) && (
             <div className="sidebar-group">
               <div className="sidebar-group-title">Management</div>
 
@@ -1894,20 +1897,6 @@ const Admin = () => {
                     {activeTab === 'ambassadortasks' && <span className="active-indicator" />}
                   </button>
                 </div>
-              )}
-
-              {/* NFC Dynamic Control */}
-              {hasPermission('nfc_cards') && (
-                <button 
-                  className={`sidebar-nav-item ${activeTab === 'nfc_cards' ? 'active' : ''}`}
-                  onClick={() => { setActiveTab('nfc_cards'); setSearchQuery(''); setSidebarOpen(false); }}
-                >
-                  <div className="nav-item-icon">
-                    <CreditCard size={18} />
-                  </div>
-                  <span className="nav-item-label">NFC Smart Cards</span>
-                  {activeTab === 'nfc_cards' && <span className="active-indicator" />}
-                </button>
               )}
             </div>
           )}
@@ -4365,41 +4354,74 @@ const Admin = () => {
                         )}
                         
                         {!homepageConfigs.hero.videoUrl && (
-                          <div 
-                            style={{ 
-                              border: '2px dashed #cbd5e1', 
-                              borderRadius: '10px', 
-                              padding: '2rem', 
-                              textAlign: 'center', 
-                              background: '#f8fafc',
-                              cursor: 'pointer',
-                              position: 'relative',
-                              transition: 'all 0.2s ease'
-                            }}
-                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                            onDrop={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const file = e.dataTransfer.files[0];
-                              if (file) handleHeroMediaFile(file);
-                            }}
-                          >
-                            <input 
-                              type="file" 
-                              accept="video/*,image/*" 
-                              id="hero-media-upload" 
-                              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
-                              onChange={(e) => {
-                                const file = e.target.files[0];
+                          <div>
+                            <div 
+                              style={{ 
+                                border: '2px dashed #cbd5e1', 
+                                borderRadius: '10px', 
+                                padding: '2rem', 
+                                textAlign: 'center', 
+                                background: '#f8fafc',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const file = e.dataTransfer.files[0];
                                 if (file) handleHeroMediaFile(file);
                               }}
-                            />
-                            <div style={{ color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                              <Plus size={24} style={{ color: 'var(--accent)' }} />
-                              <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: '500' }}>
-                                <span style={{ color: 'var(--accent)', fontWeight: '600' }}>Click to upload</span> or drag and drop
-                              </p>
-                              <p style={{ margin: 0, fontSize: '0.8rem' }}>MP4, WebM, PNG, JPG or WEBP up to 10MB</p>
+                            >
+                              <input 
+                                type="file" 
+                                accept="video/*,image/*" 
+                                id="hero-media-upload" 
+                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) handleHeroMediaFile(file);
+                                }}
+                              />
+                              <div style={{ color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                                <Plus size={24} style={{ color: 'var(--accent)' }} />
+                                <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: '500' }}>
+                                  <span style={{ color: 'var(--accent)', fontWeight: '600' }}>Click to upload</span> or drag and drop
+                                </p>
+                                <p style={{ margin: 0, fontSize: '0.8rem' }}>MP4, WebM, PNG, JPG or WEBP up to 50MB</p>
+                              </div>
+                            </div>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem' }}>
+                              <span style={{ fontSize: '0.85rem', color: '#64748b', whiteSpace: 'nowrap' }}>Or paste Video / Image URL:</span>
+                              <input 
+                                type="text" 
+                                placeholder="e.g. /hero-bg.mp4 or https://.../video.mp4"
+                                style={{ flex: 1, padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const val = e.target.value.trim();
+                                    if (val) {
+                                      setHomepageConfigs(prev => ({
+                                        ...prev,
+                                        hero: { ...prev.hero, videoUrl: val }
+                                      }));
+                                      showToast('Media URL set! Click "Save Hero Section Content" to apply.', 'success');
+                                    }
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const val = e.target.value.trim();
+                                  if (val) {
+                                    setHomepageConfigs(prev => ({
+                                      ...prev,
+                                      hero: { ...prev.hero, videoUrl: val }
+                                    }));
+                                  }
+                                }}
+                              />
                             </div>
                           </div>
                         )}

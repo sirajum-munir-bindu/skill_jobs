@@ -1,0 +1,608 @@
+import os
+import json
+from datetime import datetime
+from django.core.management.base import BaseCommand
+from accounts.models import CustomUser
+from api_core.models import Event, SiteConfig, ContactMessage
+from ambassadors.models import Ambassador, WorkReport
+from nfc.models import NfcOrder
+
+DEFAULT_CONFIGS = {
+    "hero": {
+        "badge": "Welcome to Skill Jobs",
+        "titleMain": "Shape Your Future with",
+        "titleGradient": "Professional Skills & Mentorship",
+        "videoUrl": "/hero-bg.mp4"
+    },
+    "stats": {
+        "studentsTrained": 5000,
+        "expertMentors": 120,
+        "placementSuccess": 94,
+        "campusChapters": 50
+    },
+    "faqs": [
+        {
+            "question": "Are the certificates industry-recognized?",
+            "answer": "Yes, all Skill Jobs professional certificates are co-signed by leading corporate partners and verified on the blockchain, making them highly credible for local and international recruiters."
+        },
+        {
+            "question": "Can I participate in workshops while working full-time?",
+            "answer": "Absolutely! Our courses and mentorship sessions are highly flexible, featuring live weekend classes and recorded viewports so you can learn at your own pace."
+        },
+        {
+            "question": "How does the placement assistance program work?",
+            "answer": "Once you complete a learning path and score above 80% on our skill assessment, your profile is fast-tracked and directly recommended to our network of 500+ hiring corporate partners."
+        }
+    ],
+    "testimonials": [
+        {
+            "quote": "The Career Building Workshop co-signed by corporate mentors changed my trajectory. The assessors gave direct, constructive code feedback, and I landed my web dev role within 2 weeks!",
+            "author": "Aisha Rahman",
+            "role": "Software Engineer, MNC",
+            "avatar": "A"
+        },
+        {
+            "quote": "Representing Skill Jobs as a Campus Lead gave me invaluable teamwork, public relations, and event organization leadership skills. The recruiters loved my project management stories.",
+            "author": "Rahul Hassan",
+            "role": "Management Trainee, Telecom",
+            "avatar": "R"
+        },
+        {
+            "quote": "Designing active project interfaces during the Figma design sprint was fantastic. Building actual client prototypes allowed me to skip theory and secure my Product Designer internship.",
+            "author": "Sarah Ahmed",
+            "role": "Product Designer, Startup",
+            "avatar": "S"
+        }
+    ],
+    "learningPaths": {
+        "web": {
+            "title": "Web Engineering",
+            "icon": "Code",
+            "color": "#0284c7",
+            "badge": "Most Popular",
+            "desc": "Become a Full-Stack developer capable of building complex, secure, and highly scalable cloud systems from scratch.",
+            "duration": "16 Weeks (120 Hours)",
+            "modules": [
+                "Frontend UI Development (React.js, Tailwind)",
+                "State Management (Redux Toolkit, APIs)",
+                "Backend Architecture (Node.js, Express)",
+                "Database Systems & Security (MongoDB, SQL)"
+            ],
+            "tools": ["React", "Node.js", "Express", "MongoDB", "GitHub", "Tailwind"],
+            "capstone": {
+                "name": "SaaS Application Platform",
+                "desc": "Develop a complete Multi-tenant CRM application featuring payment integrations, real-time analytics, and role-based access control."
+            }
+        },
+        "ai": {
+            "title": "Data Science & AI",
+            "icon": "Brain",
+            "color": "#10b981",
+            "badge": "High Growth",
+            "desc": "Master data analytics pipelines, automated predictive modeling, and integration of generative AI models in business applications.",
+            "duration": "18 Weeks (135 Hours)",
+            "modules": [
+                "Data Analysis (Python, Pandas, NumPy)",
+                "Database Querying & Optimization (SQL)",
+                "Machine Learning Algorithms (Scikit-Learn)",
+                "Deep Learning & Generative AI APIs"
+            ],
+            "tools": ["Python", "SQL", "Pandas", "Scikit-Learn", "PostgreSQL", "PowerBI"],
+            "capstone": {
+                "name": "E-Commerce Suggestion Engine",
+                "desc": "Construct an automated ML pipeline that trains user behavior models and outputs real-time personalized product suggestions."
+            }
+        },
+        "design": {
+            "title": "UI/UX Product Design",
+            "icon": "Layers",
+            "color": "#8b5cf6",
+            "badge": "Creative Track",
+            "desc": "Learn modern user experience methodologies, build interactive prototypes, and create design systems for high-traffic products.",
+            "duration": "12 Weeks (90 Hours)",
+            "modules": [
+                "User Research & Empathy Mapping",
+                "Wireframing & Information Architecture",
+                "Interactive High-Fidelity Prototyping",
+                "Usability Testing & Design System Scaling"
+            ],
+            "tools": ["Figma", "FigJam", "Miro", "Adobe Suite", "Prototyping", "A/B Testing"],
+            "capstone": {
+                "name": "FinTech Digital Wallet App",
+                "desc": "Conduct thorough user testing and design a beautiful financial product interface, building a comprehensive design system."
+            }
+        }
+    },
+    "infoBlocks": [
+        {
+            "badge": "UPCOMING FLAGSHIP EVENT",
+            "title": "Join Our Next Mega Workshop & Competition",
+            "desc": "Don't miss our upcoming flagship workshops, hackathons, and industry competitions. Network with active corporate mentors, participate in real-time challenges, and unlock exclusive career opportunities.",
+            "bullets": [
+                "Live interactive mentorship sessions with top corporate executives",
+                "Hands-on project building and live competitive track challenges",
+                "Win certificates of excellence and direct recruitment referrals"
+            ],
+            "btnText": "Register For Event",
+            "btnLink": "/events",
+            "image": "https://images.unsplash.com/photo-1515187029135-18ee286d815b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "reverse": False
+        },
+        {
+            "badge": "COMPLETED SEMINARS & EVENTS",
+            "title": "Relive Our Past Mega Seminars & Success Stories",
+            "desc": "Explore highlights from our recently completed campus bootcamps, corporate summits, and national seminars. Witness real student transformations, project showcases, and how our alumni transitioned directly into top corporate roles.",
+            "bullets": [
+                "Archived masterclass recordings and downloadable seminar slides",
+                "Alumni project highlights and live competition winners gallery",
+                "Direct placement stats and recruiter testimonials from past events"
+            ],
+            "btnText": "View Completed Seminars",
+            "btnLink": "/events",
+            "image": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "reverse": True
+        }
+    ],
+    "quiz": {
+        "badge": "Career Matcher Widget",
+        "title": "Find Your Ideal Skill Track",
+        "desc": "Unsure which path matches your strengths? Take this 30-second assessment to discover the best fit.",
+        "introTitle": "Career Fit Quiz",
+        "introDesc": "Answer 3 quick questions about your creative tastes, coding experience, and professional goals to get a recommended skill path.",
+        "startBtnText": "Start Matcher",
+        "questions": [
+            {
+                "id": 1,
+                "question": "What type of projects excite you the most?",
+                "options": [
+                    { "text": "Building interactive web platforms and applications", "type": "web" },
+                    { "text": "Discovering patterns in data and training AI models", "type": "ai" },
+                    { "text": "Crafting beautiful interfaces and user experiences", "type": "design" }
+                ]
+            },
+            {
+                "id": 2,
+                "question": "Which toolkit would you prefer to master?",
+                "options": [
+                    { "text": "React, Node.js, APIs, and cloud databases", "type": "web" },
+                    { "text": "Python, SQL, machine learning, and graphs", "type": "ai" },
+                    { "text": "Figma design systems, layouts, and UX testing", "type": "design" }
+                ]
+            },
+            {
+                "id": 3,
+                "question": "What is your main professional objective?",
+                "options": [
+                    { "text": "Become a Full-Stack Engineer or Tech Lead", "type": "web" },
+                    { "text": "Become a Business Intelligence or ML Expert", "type": "ai" },
+                    { "text": "Become a UI/UX Designer or Product Manager", "type": "design" }
+                ]
+            }
+        ]
+    },
+    "cta": {
+        "title": "Ready to unlock your professional potential?",
+        "desc": "Register for our upcoming certified workshops and fast-track your applications to 500+ top recruiters today.",
+        "btn1Text": "View Upcoming Classes",
+        "btn1Link": "/events",
+        "btn2Text": "Contact Advisors",
+        "btn2Link": "/contact"
+    },
+    "about": {
+        "badge": "Empowering Next-Gen Leaders",
+        "titleMain": "Bridging Passion and",
+        "titleGradient": "Profession",
+        "subtitle": "Skill Jobs is a youth-driven career development initiative designed to equip students and fresh graduates with real-world skills, mentorship, and professional opportunities.",
+        "whoWeAreTitle": "A Community That Genuinely Cares About Your Future",
+        "whoWeAreDesc1": "Skill Jobs started as a simple idea among friends: what if there was a community that helped students navigate their careers without the intimidating corporate jargon?",
+        "whoWeAreDesc2": "Today, we are a thriving youth-focused career development platform. We believe that every student has potential, but sometimes they just need the right guidance, the right network, and the right opportunities to shine.",
+        "whoWeAreImage": "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+        "whoWeAreFeatures": [
+            "Practical curriculum pathways designed by industry specialists",
+            "Exclusive access to campus networks and corporate mentors",
+            "Direct job listings and fast-track resume evaluations"
+        ],
+        "milestones": [
+            { "value": "5,000+", "label": "Students Mentored", "color": "#3b82f6" },
+            { "value": "50+", "label": "Workshops & Events", "color": "#ef4444" },
+            { "value": "25+", "label": "Campus Chapters", "color": "#10b981" },
+            { "value": "92%", "label": "Placement Success", "color": "#f59e0b" }
+        ],
+        "values": [
+            {
+                "title": "Mission-Driven",
+                "desc": "To empower youth by providing accessible skills training, meaningful networking, and real-world career opportunities.",
+                "color": "blue"
+            },
+            {
+                "title": "Visionary Growth",
+                "desc": "To build the most trusted youth career development ecosystem, inspiring a generation of confident, skilled professionals.",
+                "color": "yellow"
+            },
+            {
+                "title": "Youth First",
+                "desc": "Designed from the ground up for students, fresh graduates, and ambitious young minds eager to leave their mark.",
+                "color": "red"
+            }
+        ],
+        "timeline": [
+            {
+                "year": "2024",
+                "title": "The Spark",
+                "desc": "Founded by a group of passionate graduates with a simple mission: demystify the transition from university to corporate careers."
+            },
+            {
+                "year": "2025",
+                "title": "Thriving Network",
+                "desc": "Launched our Campus Ambassador Program across 15+ universities, connecting over 2,000 students with industry mentors."
+            },
+            {
+                "year": "2026",
+                "title": "Career Ecosystem",
+                "desc": "Upgraded to a fully dynamic career discovery platform, hosting interactive learning paths, mock interview labs, and direct recruiter pathways."
+            }
+        ],
+        "ctaTitle": "Ready to Shape Your Future?",
+        "ctaDesc": "Whether you want to join as an Ambassador representing your campus or build direct skills at our next professional workshop, we have a place for you.",
+        "ctaBtn1Text": "Explore Skills Programs",
+        "ctaBtn2Text": "Become Campus Lead"
+    },
+    "ambassador": {
+        "badge": "Join the Student Network",
+        "titleMain": "Become a Campus",
+        "titleGradient": "Ambassador",
+        "subtitle": "Represent Skill Jobs at your university, build your professional network, and develop critical leadership, marketing, and communication skills.",
+        "introTitle": "What is the Ambassador Program?",
+        "introDesc": "The Skill Jobs Ambassador Program is an exclusive leadership opportunity for students who are passionate about career development, tech innovation, and community building. You will bridge the gap between academia and the corporate world, representing Skill Jobs on your campus and driving impact.",
+        "rolesTitle": "Roles & Responsibilities",
+        "rolesList": [
+            "Represent Skill Jobs as the official campus liaison",
+            "Promote premium career workshops and certified programs to peers",
+            "Gather student feedback and local campus training requirements",
+            "Coordinate and organize on-campus networking mixers and bootcamps"
+        ],
+        "benefitsTitle": "Benefits of Joining",
+        "benefitsSubtitle": "Gain exclusive credentials, hands-on training, and corporate placements while representing us.",
+        "benefitsList": [
+            { "title": "Leadership Experience", "desc": "Lead initiatives on your campus and add real-world management experience to your CV.", "icon": "Shield" },
+            { "title": "Elite Networking", "desc": "Build connections with corporate recruiters, tech leads, and fellow ambassadors across the country.", "icon": "Users" },
+            { "title": "Official Certification", "desc": "Receive a recognized leadership certificate and direct letter of recommendation upon tenure completion.", "icon": "Award" },
+            { "title": "Professional Development", "desc": "Access regular masterclasses on soft skills, digital branding, and competitive career prep.", "icon": "Zap" },
+            { "title": "Event Management", "desc": "Gain behind-the-scenes event experience and help co-organize major tech conferences.", "icon": "Briefcase" },
+            { "title": "VIP Access", "desc": "Get free entry and VIP seating at all Skill Jobs premium events, webinars, and hiring drives.", "icon": "Award" }
+        ],
+        "journeyTitle": "Your Ambassador Journey",
+        "journeySteps": [
+            { "phase": "Phase 1: Apply & Screen", "title": "Submit Application", "desc": "Fill out the online application. Selected candidates undergo a short online interview." },
+            { "phase": "Phase 2: Onboard & Kit", "title": "Official Onboarding", "desc": "Receive the official Ambassador Handbook, digital assets, and an exclusive brand kit." },
+            { "phase": "Phase 3: Activate Campus", "title": "Lead & Engage", "desc": "Share skill programs, coordinate on-campus mixers, and represent our workshops." },
+            { "phase": "Phase 4: Graduate & Placement", "title": "Placement Pathway", "desc": "Earn certificates, secure direct recommendations, and get fast-tracked for internships." }
+        ],
+        "faqsTitle": "Ambassador FAQs",
+        "faqsList": [
+            { "question": "How long is the ambassador tenure?", "answer": "The typical tenure is 6 months, aligned with the academic semester, with options for extensions based on performance." },
+            { "question": "What is the expected weekly time commitment?", "answer": "It is highly flexible and usually takes 3 to 5 hours per week, allowing you to prioritize your studies and exams." },
+            { "question": "Is this a paid role?", "answer": "While this is a voluntary leadership role, ambassadors earn performance-based commissions, free access to premium workshops, and exclusive corporate placement referrals." },
+            { "question": "Can there be multiple ambassadors per campus?", "answer": "Yes! Large campuses can have a Campus Lead, a Co-Lead, and several active Student Representatives to divide event coordination." }
+        ],
+        "campuses": [
+            {
+                "key": "DU",
+                "fullName": "Dhaka University",
+                "color": "#7c3aed",
+                "logo": "🏛️",
+                "description": "Our DU Chapter is one of our most active student communities. We hold regular on-campus networking mixers, career counseling bootcamps, and mock interviews to prepare students for top tier internships.",
+                "stats": { "studentsReached": "1,500+", "workshops": "12+", "placementTrack": "92%" },
+                "leads": [
+                    { "name": "Ayesha Rahman", "role": "Campus Lead", "dept": "CSE, 4th Year", "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80" },
+                    { "name": "Sajid Islam", "role": "Co-Lead", "dept": "Marketing, 3rd Year", "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80" }
+                ]
+            },
+            {
+                "key": "JU",
+                "fullName": "Jahangirnagar University",
+                "color": "#ec4899",
+                "logo": "🌿",
+                "description": "The JU Chapter bridges the gap between academic theories and professional career practices, focusing on leadership summits and digital marketing events in a scenic green campus environment.",
+                "stats": { "studentsReached": "950+", "workshops": "6+", "placementTrack": "88%" },
+                "leads": [
+                    { "name": "Nabila Hassan", "role": "Campus Lead", "dept": "Economics, 3rd Year", "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80" },
+                    { "name": "Zuhair Alvi", "role": "Co-Lead", "dept": "IBA, 2nd Year", "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80" }
+                ]
+            },
+            {
+                "key": "RU",
+                "fullName": "Rajshahi University",
+                "color": "#3b82f6",
+                "logo": "🎓",
+                "description": "Our northern hub at RU drives technological innovation. We focus heavily on competitive programming bootcamps, resume audits, and soft-skills mentoring sessions for local corporate readiness.",
+                "stats": { "studentsReached": "1,100+", "workshops": "8+", "placementTrack": "90%" },
+                "leads": [
+                    { "name": "Tanvir Ahmed", "role": "Campus Lead", "dept": "EEE, 4th Year", "image": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&h=150&q=80" },
+                    { "name": "Ishrat Jahan", "role": "Co-Lead", "dept": "English, 3rd Year", "image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&h=150&q=80" }
+                ]
+            },
+            {
+                "key": "CU",
+                "fullName": "Chittagong University",
+                "color": "#10b981",
+                "logo": "⛰️",
+                "description": "CU Chapter is empowering the port city youth. We hold cross-functional team hackathons, public speaking training programs, and direct corporate placement workshops at Chittagong.",
+                "stats": { "studentsReached": "850+", "workshops": "5+", "placementTrack": "85%" },
+                "leads": [
+                    { "name": "Fariha Sultana", "role": "Campus Lead", "dept": "BBA, 3rd Year", "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&h=150&q=80" },
+                    { "name": "Adnan Chowdhury", "role": "Co-Lead", "dept": "CSE, 4th Year", "image": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&h=150&q=80" }
+                ]
+            },
+            {
+                "key": "DIU",
+                "fullName": "Daffodil International University",
+                "color": "#f59e0b",
+                "logo": "💻",
+                "description": "A highly tech-focused hub at DIU Smart City campus. We run weekly coding masterclasses, product design sprints (using Figma), and showcase student project prototypes to our network of recruiters.",
+                "stats": { "studentsReached": "1,800+", "workshops": "14+", "placementTrack": "94%" },
+                "leads": [
+                    { "name": "Mahir Asif", "role": "Campus Lead", "dept": "Software Engineering, 4th Year", "image": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=150&h=150&q=80" },
+                    { "name": "Lamia Kabir", "role": "Co-Lead", "dept": "English, 3rd Year", "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&h=150&q=80" }
+                ]
+            },
+            {
+                "key": "BUFT",
+                "fullName": "BGMEA University of Fashion & Technology",
+                "color": "#6366f1",
+                "logo": "🎨",
+                "description": "The BUFT Chapter focuses on apparel engineering, fashion design tech, digital branding, and product management. We connect creative students directly with top garments, retail, and tech companies.",
+                "stats": { "studentsReached": "700+", "workshops": "4+", "placementTrack": "86%" },
+                "leads": [
+                    { "name": "Rashedul Bari", "role": "Campus Lead", "dept": "Apparel Engineering, 4th Year", "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&h=150&q=80" },
+                    { "name": "Ananya Roy", "role": "Co-Lead", "dept": "Fashion Design, 3rd Year", "image": "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=150&h=150&q=80" }
+                ]
+            }
+        ]
+    },
+    "contact": {
+        "email": "corporate2@skill.jobs",
+        "phone": "01847-334785",
+        "address": "Dhaka, Bangladesh",
+        "facebook": "#",
+        "linkedin": "#",
+        "instagram": "#"
+    },
+    "ambassadorMetrics": {
+        "todayTarget": 0,
+        "todayAchieved": 0,
+        "monthlyTarget": 0,
+        "monthlyAchieved": 0,
+        "registered": 0,
+        "verified": 0,
+        "rejected": 0,
+        "qaa": 0,
+        "incentivePerQAA": 0,
+        "daysRemaining": 0,
+        "performanceCycle": "",
+        "announcement": ""
+    },
+    "ambassadorTasks": [],
+    "nfcCards": [
+        {
+            "id": "matte-black",
+            "name": "Obsidian Matte Black",
+            "badge": "Most Popular",
+            "theme": "dark",
+            "cardBg": "linear-gradient(135deg, #111827 0%, #1f2937 50%, #030712 100%)",
+            "textColor": "#ffffff",
+            "accentColor": "#38bdf8",
+            "texture": "matte",
+            "material": "Premium Matte Finish PVC",
+            "price": 499,
+            "originalPrice": 999,
+            "discount": "50% OFF",
+            "nfcColor": "#38bdf8",
+            "chipFinish": "gold"
+        },
+        {
+            "id": "cyber-cyan",
+            "name": "Skill Jobs Cyber Sky",
+            "badge": "Brand Edition",
+            "theme": "blue",
+            "cardBg": "linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #082f49 100%)",
+            "textColor": "#ffffff",
+            "accentColor": "#38bdf8",
+            "texture": "gloss",
+            "material": "High-Gloss Scratchproof PVC",
+            "price": 549,
+            "originalPrice": 1099,
+            "discount": "50% OFF",
+            "nfcColor": "#e0f2fe",
+            "chipFinish": "silver"
+        },
+        {
+            "id": "executive-gold",
+            "name": "Executive 24K Gold",
+            "badge": "Luxury Tier",
+            "theme": "gold",
+            "cardBg": "linear-gradient(135deg, #78350f 0%, #b45309 40%, #d97706 70%, #451a03 100%)",
+            "textColor": "#fef3c7",
+            "accentColor": "#fbbf24",
+            "texture": "metallic",
+            "material": "Brushed Golden Metal Finish",
+            "price": 899,
+            "originalPrice": 1799,
+            "discount": "50% OFF",
+            "nfcColor": "#fef08a",
+            "chipFinish": "gold"
+        },
+        {
+            "id": "titanium-silver",
+            "name": "Platinum Titanium Metal",
+            "badge": "Heavyweight",
+            "theme": "silver",
+            "cardBg": "linear-gradient(135deg, #334155 0%, #64748b 45%, #1e293b 80%, #0f172a 100%)",
+            "textColor": "#f8fafc",
+            "accentColor": "#94a3b8",
+            "texture": "metal",
+            "material": "Laser-Engraved Stainless Steel (25g)",
+            "price": 1399,
+            "originalPrice": 2799,
+            "discount": "50% OFF",
+            "nfcColor": "#cbd5e1",
+            "chipFinish": "silver"
+        },
+        {
+            "id": "pearl-white",
+            "name": "Minimalist Pearl White",
+            "badge": "Clean Modern",
+            "theme": "light",
+            "cardBg": "linear-gradient(135deg, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%)",
+            "textColor": "#0f172a",
+            "accentColor": "#0284c7",
+            "texture": "pearl",
+            "material": "Ultra-Smooth Frosted PVC",
+            "price": 499,
+            "originalPrice": 999,
+            "discount": "50% OFF",
+            "nfcColor": "#0284c7",
+            "chipFinish": "gold"
+        }
+    ],
+    "nfcReviews": [
+        {
+            "id": "rev-1",
+            "name": "Tanvir Ahmed",
+            "role": "Campus Ambassador Lead, DU",
+            "rating": 5,
+            "comment": "This NFC card is a total game changer during tech summits and career fairs! I just tap my card to a recruiter's iPhone and boom—my resume and GitHub profile open instantly.",
+            "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
+            "createdAt": "2025-01-01T00:00:00.000Z"
+        },
+        {
+            "id": "rev-2",
+            "name": "Sabbir Hossain",
+            "role": "Full-Stack Software Engineer",
+            "rating": 5,
+            "comment": "The Obsidian Black finish looks ultra-premium. Everyone I meet is amazed when they see their phone open my portfolio with just one physical tap. Worth every single taka!",
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+            "createdAt": "2025-01-01T00:00:00.000Z"
+        },
+        {
+            "id": "rev-3",
+            "name": "Nusrat Jahan",
+            "role": "UI/UX Product Designer",
+            "rating": 5,
+            "comment": "No more carrying stacks of paper cards that get thrown away. Being able to update my portfolio links anytime from the dashboard is incredible.",
+            "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
+            "createdAt": "2025-01-01T00:00:00.000Z"
+        }
+    ]
+}
+
+DEFAULT_USERS = [
+    {
+        "id": "usr_1001",
+        "name": "Super Admin",
+        "email": "admin@skill.jobs",
+        "password": "admin123",
+        "role": "Super Admin",
+        "permissions": [
+            "dashboard", "users", "ambassadors", "ambassadordashboard",
+            "ambassadortasks", "nfc_cards", "ambassador_performance",
+            "ambassador_workreport", "homepage", "aboutpage",
+            "ambassadorpage", "contactpage", "contactmessages"
+        ],
+        "createdAt": "2026-01-01T00:00:00"
+    },
+    {
+        "id": "usr_1002",
+        "name": "Corporate Relations",
+        "email": "corporate2@skill.jobs",
+        "password": "password123",
+        "role": "Admin",
+        "permissions": [
+            "ambassadors",
+            "contactmessages",
+            "ambassadordashboard"
+        ],
+        "createdAt": "2026-01-15T10:30:00"
+    },
+    {
+        "id": "usr_1003",
+        "name": "Shahriar Khan",
+        "email": "auhin.and.aurin@gmail.com",
+        "password": "password123",
+        "role": "Campus Ambassador",
+        "permissions": [
+            "ambassador_performance",
+            "ambassador_workreport"
+        ],
+        "createdAt": "2026-08-09T14:30:00"
+    },
+    {
+        "id": "usr_1004",
+        "name": "Maimuna Ahmed",
+        "email": "maishamaimunaahmed@gmail.com",
+        "password": "password123",
+        "role": "Campus Ambassador",
+        "permissions": [
+            "ambassador_performance",
+            "ambassador_workreport"
+        ],
+        "createdAt": "2026-08-15T10:00:00"
+    },
+    {
+        "id": "usr_1005",
+        "name": "Md. Rubaeid Jahan Joy",
+        "email": "262-15-075@diu.edu.bd",
+        "password": "password123",
+        "role": "Campus Ambassador",
+        "permissions": [
+            "ambassador_performance",
+            "ambassador_workreport"
+        ],
+        "createdAt": "2026-08-20T12:00:00"
+    }
+]
+
+
+class Command(BaseCommand):
+    help = "Seeds PostgreSQL / Django database with initial configurations, default admin accounts, and legacy data."
+
+    def handle(self, *args, **options):
+        self.stdout.write("Starting database seeding for Skill Jobs...")
+
+        # 1. Seed Site Configurations
+        for key, val in DEFAULT_CONFIGS.items():
+            cfg, created = SiteConfig.objects.get_or_create(
+                key=key,
+                defaults={'value': val, 'updatedAt': datetime.now().isoformat()}
+            )
+            if created:
+                self.stdout.write(f"[+] Created configuration: {key}")
+            else:
+                self.stdout.write(f"[*] Configuration already exists: {key}")
+
+        # 2. Seed Default Users
+        for u in DEFAULT_USERS:
+            user = CustomUser.objects.filter(email__iexact=u['email']).first()
+            if not user:
+                user = CustomUser(
+                    id=u['id'],
+                    name=u['name'],
+                    email=u['email'].lower(),
+                    role=u['role'],
+                    permissions=u.get('permissions', []),
+                    createdAt=u.get('createdAt', datetime.now().isoformat())
+                )
+                if user.role == "Super Admin":
+                    user.is_staff = True
+                    user.is_superuser = True
+                elif user.role == "Admin":
+                    user.is_staff = True
+
+                user.set_password(u['password'])
+                user.save()
+                self.stdout.write(f"[+] Created default user: {user.email} ({user.role})")
+            else:
+                self.stdout.write(f"[*] User already exists: {user.email}")
+
+        self.stdout.write("Database seeding completed successfully!")
+

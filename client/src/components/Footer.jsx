@@ -50,8 +50,7 @@ const Footer = () => {
             <ul className="footer-links">
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/ambassador">Ambassador Program</Link></li>
-              <li><Link to="/buy-nfc">Smart NFC Card</Link></li>
-              <li><a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer">Events & Workshops</a></li>
+              <li><a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer">Upcoming Events & Bootcamps</a></li>
               <li><Link to="/contact">Contact Us</Link></li>
             </ul>
           </div>

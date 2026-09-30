@@ -15,7 +15,6 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Admin = lazy(() => import('./pages/Admin'));
 const RunningAmbassadors = lazy(() => import('./pages/RunningAmbassadors'));
-const BuyNFC = lazy(() => import('./pages/BuyNFC'));
 
 function EventRedirect() {
   window.location.replace('https://event.skill.jobs/');
@@ -45,8 +44,8 @@ function AppContent() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/ambassador" element={<Ambassador />} />
-            <Route path="/buy-nfc" element={<BuyNFC />} />
-            <Route path="/nfc" element={<BuyNFC />} />
+            <Route path="/buy-nfc" element={<EventRedirect />} />
+            <Route path="/nfc" element={<EventRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />

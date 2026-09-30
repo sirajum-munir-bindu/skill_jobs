@@ -1293,11 +1293,12 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE MEDIA QUERIES (Desktop, Tablet, Mobile Drawer)
+   RESPONSIVE MEDIA QUERIES (Desktop, Tablet, Mobile Drawer, Ultra-compact)
    ========================================================================== */
 @media (max-width: 1200px) {
   .saas-stats-grid {
     grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
   }
   .grid-4 {
     grid-template-columns: repeat(2, 1fr);
@@ -1307,29 +1308,39 @@
 @media (max-width: 1024px) {
   .admin-sidebar {
     transform: translateX(-100%);
-    width: 280px;
+    width: min(85vw, 290px);
+    z-index: 1001;
   }
   .admin-sidebar.open {
     transform: translateX(0);
   }
   .sidebar-close-mobile {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .admin-main-wrapper {
     margin-left: 0;
+    width: 100%;
+    min-width: 0;
   }
   .mobile-sidebar-toggle {
     display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .sidebar-backdrop {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.55);
+    background: rgba(15, 23, 42, 0.65);
     backdrop-filter: blur(4px);
-    z-index: 90;
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1000;
     animation: fadeInBackdrop 0.2s ease-out;
   }
   @keyframes fadeInBackdrop {
@@ -1343,8 +1354,8 @@
 
 @media (max-width: 768px) {
   .admin-top-header {
-    padding: 0 1.25rem;
-    height: 68px;
+    padding: 0 1rem;
+    height: 64px;
   }
   .header-search-box {
     display: none;
@@ -1356,88 +1367,215 @@
     display: none;
   }
   .admin-content-body {
-    padding: 1.25rem;
-    gap: 1.5rem;
+    padding: 1rem 0.75rem;
+    gap: 1.25rem;
+    width: 100%;
+    overflow-x: hidden;
   }
   .saas-stats-grid {
     grid-template-columns: 1fr;
+    gap: 0.85rem;
   }
   .saas-main-container {
-    padding: 1.5rem;
+    padding: 1.25rem 0.85rem;
+    border-radius: 16px;
+    width: 100%;
   }
   .welcome-quick-actions {
     grid-template-columns: 1fr;
+    gap: 0.85rem;
   }
   .admin-event-row {
     grid-template-columns: 1fr;
     text-align: center;
     justify-items: center;
+    gap: 0.85rem;
   }
   .admin-event-meta {
     justify-content: center;
+    flex-wrap: wrap;
   }
   .saas-section-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
   }
   .saas-section-actions {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    gap: 0.65rem;
+  }
+  .saas-section-actions .btn-saas,
+  .saas-section-actions button {
+    width: 100%;
+    justify-content: center;
   }
   .saas-toolbar-search {
     width: 100%;
+  }
+
+  /* Universal grid collapse for mobile forms and cards */
+  .grid-2, .grid-3, .grid-4,
+  div[style*="gridTemplateColumns"],
+  div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Responsive Table Container with Horizontal Touch Scroll */
+  .table-container,
+  .saas-table-wrapper,
+  .admin-table-container {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0.75rem 0 !important;
+    border-radius: 12px;
+    border: 1px solid var(--saas-border);
+  }
+
+  .admin-table {
+    min-width: 620px; /* Preserve table structure and allow touch horizontal scrolling */
+    width: 100%;
+  }
+
+  /* Modal responsiveness on mobile */
+  .modal-overlay {
+    padding: 0.75rem;
+    align-items: flex-end; /* Sheet-like on mobile for ergonomic reach */
+  }
+
+  .modal-card {
+    border-radius: 20px 20px 0 0;
+    max-width: 100vw;
+    width: 100%;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 1.15rem 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .modal-body {
+    padding: 1.25rem 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.25rem;
+    flex-direction: column-reverse;
+    gap: 0.65rem;
+    flex-shrink: 0;
+  }
+
+  .modal-footer button,
+  .modal-footer .btn-saas {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Form controls font size to prevent iOS zoom */
+  input, select, textarea {
+    font-size: 16px !important;
   }
 }
 
 @media (max-width: 576px) {
   .admin-top-header {
-    padding: 0 0.85rem;
-    height: 60px;
+    padding: 0 0.75rem;
+    height: 58px;
+  }
+  .header-breadcrumbs .breadcrumb-root,
+  .header-breadcrumbs .breadcrumb-separator {
+    display: none;
+  }
+  .header-breadcrumbs .breadcrumb-current {
+    font-size: 0.88rem;
   }
   .admin-content-body {
-    padding: 0.85rem;
-    gap: 1.15rem;
+    padding: 0.75rem 0.5rem;
+    gap: 1rem;
   }
   .saas-main-container {
-    padding: 1.15rem;
-    border-radius: 16px;
+    padding: 1rem 0.65rem;
+    border-radius: 14px;
   }
   .saas-stat-card {
-    padding: 1.25rem;
+    padding: 1rem;
+    border-radius: 14px;
+  }
+  .saas-stat-number {
+    font-size: 1.85rem;
   }
   .admin-table th,
   .admin-table td {
-    padding: 0.85rem 0.75rem;
-    font-size: 0.82rem;
+    padding: 0.75rem 0.6rem;
+    font-size: 0.8rem;
   }
   .table-container {
-    margin: 1rem 0.5rem !important;
-  }
-  .modal-card {
-    border-radius: 16px;
-    max-width: 95vw;
-  }
-  .modal-header {
-    padding: 1rem 1.25rem;
-  }
-  .modal-body {
-    padding: 1.25rem 1rem;
+    margin: 0.5rem 0 !important;
   }
   .lock-card {
-    padding: 2rem 1.25rem;
+    padding: 2rem 1.15rem;
+    border-radius: 18px;
+    margin: 0 0.5rem;
+  }
+  .lock-card h2 {
+    font-size: 1.45rem;
+  }
+  .lock-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+  }
+  .passcode-input {
+    font-size: 1rem;
+    padding: 0.85rem 1rem;
+    letter-spacing: 2px;
   }
 }
 
-
 @media (max-width: 400px) {
-  .saas-main-container {
-    padding: 0.85rem;
+  .admin-top-header {
+    padding: 0 0.5rem;
+    height: 54px;
   }
-  .admin-top-header .header-breadcrumb {
-    font-size: 0.85rem;
+  .mobile-sidebar-toggle {
+    width: 38px;
+    height: 38px;
+  }
+  .saas-main-container {
+    padding: 0.85rem 0.5rem;
   }
   .saas-stat-number {
-    font-size: 1.65rem;
+    font-size: 1.55rem;
+  }
+  .saas-stat-label {
+    font-size: 0.78rem;
+  }
+  .modal-overlay {
+    padding: 0;
+  }
+  .modal-card {
+    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+  }
+  .modal-header {
+    padding: 1rem;
+  }
+  .modal-body {
+    padding: 1rem 0.75rem;
+  }
+  .modal-footer {
+    padding: 0.85rem 1rem;
   }
 }
 
@@ -1447,7 +1585,8 @@
   justify-content: center;
   align-items: center;
   min-height: 80vh;
-  padding: 2rem;
+  padding: 1.5rem 0.75rem;
+  width: 100%;
 }
 
 .lock-card {

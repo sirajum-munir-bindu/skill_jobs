@@ -145,16 +145,15 @@ const Navbar = () => {
           <Link to="/about" className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}>About</Link>
           <Link to="/ambassador" className={`nav-link ${location.pathname === '/ambassador' ? 'active' : ''}`}>Ambassador</Link>
           
-          {/* Buy NFC Button with Top-Side Red Bold NEW Tag */}
-          <Link 
-            to="/buy-nfc" 
-            className={`nav-link ${location.pathname === '/buy-nfc' || location.pathname === '/nfc' ? 'active' : ''}`}
+          <a 
+            href="https://event.skill.jobs/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="nav-link"
           >
-            <span className="nfc-top-badge">NEW</span>
-            Buy NFC
-          </Link>
-
-          <a href="https://event.skill.jobs/" target="_blank" rel="noopener noreferrer" className="nav-link">Events</a>
+            <span className="nfc-top-badge">LIVE</span>
+            Events & Workshops
+          </a>
           <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
           {localStorage.getItem('user') ? (
             <Link to="/dashboard" className="btn btn-outline nav-btn">Dashboard</Link>

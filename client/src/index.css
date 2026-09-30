@@ -302,6 +302,8 @@ button {
 /* Dynamic Page Spacing Layout under Floating Capsule Navbar */
 .main-content {
   flex: 1;
+  width: 100%;
+  min-width: 0;
 }
 
 .main-content.home-layout {
@@ -316,4 +318,39 @@ button {
   .main-content.subpage-layout {
     margin-top: 85px;
   }
+}
+
+@media (max-width: 576px) {
+  .main-content.subpage-layout {
+    margin-top: 76px;
+  }
+}
+
+/* Global Mobile Viewport & Safe-Area Safeguards */
+@supports (padding: env(safe-area-inset-top)) {
+  .navbar {
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+  }
+  .footer {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2rem);
+  }
+  .floating-whatsapp-container {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+    right: calc(env(safe-area-inset-right, 0px) + 16px);
+  }
+}
+
+/* Ensure all tables are horizontally scrollable on mobile */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-responsive,
+.table-container,
+.reports-table-container,
+.work-report-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }

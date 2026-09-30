@@ -9,3 +9,25 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+
+  - type: web
+    name: skilljobs-api
+    env: python
+    rootDir: server_django
+    buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py seed_data
+    startCommand: gunicorn skilljobs_backend.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: CORS_ALLOW_ALL_ORIGINS
+        value: "True"
+      - fromDatabase:
+          name: skilljobs-postgres
+          property: connectionString
+        key: DATABASE_URL
+
+databases:
+  - name: skilljobs-postgres
+    databaseName: skilljobs_db
+    user: skilljobs_user
+    plan: free
