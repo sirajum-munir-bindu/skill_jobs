@@ -808,20 +808,22 @@ const Dashboard = () => {
                                 )}
                               </td>
                               <td>
-                                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                   <button 
                                     className="report-action-btn edit"
                                     title="Edit Account"
                                     onClick={() => handleOpenEditReportModal(report)}
+                                    aria-label="Edit Account"
                                   >
-                                    <Edit2 size={14} />
+                                    <Edit2 size={17} />
                                   </button>
                                   <button 
                                     className="report-action-btn delete"
                                     title="Delete Account"
                                     onClick={() => handleDeleteReport(report._id || report.id)}
+                                    aria-label="Delete Account"
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={17} />
                                   </button>
                                 </div>
                               </td>
