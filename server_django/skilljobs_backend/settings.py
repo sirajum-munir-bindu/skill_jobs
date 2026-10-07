@@ -65,35 +65,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'skilljobs_backend.wsgi.application'
 ASGI_APPLICATION = 'skilljobs_backend.asgi.application'
 
-# Database Setup with resilient PostgreSQL detection and SQLite fallback
+# Database Setup with complete Neon PostgreSQL and serverless support
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-def check_postgres_connection(db_config):
-    """Test if PostgreSQL is reachable, otherwise allow safe local fallback."""
-    try:
-        import psycopg
-        conn_str = f"host={db_config.get('HOST', '127.0.0.1')} port={db_config.get('PORT', '5432')} user={db_config.get('USER', 'postgres')} password={db_config.get('PASSWORD', '')} dbname={db_config.get('NAME', 'skilljobs_db')} connect_timeout=3"
-        with psycopg.connect(conn_str) as conn:
-            pass
-        return True
-    except Exception:
-        return False
-
 if DATABASE_URL:
-    parsed_db = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    if 'postgresql' in parsed_db.get('ENGINE', '') and DEBUG:
-        if check_postgres_connection(parsed_db):
-            DATABASES = {'default': parsed_db}
-        else:
-            print("[NOTICE] PostgreSQL not reachable at DATABASE_URL. Using SQLite local fallback.")
-            DATABASES = {
-                'default': {
-                    'ENGINE': 'django.db.backends.sqlite3',
-                    'NAME': BASE_DIR / 'db.sqlite3',
-                }
-            }
-    else:
-        DATABASES = {'default': parsed_db}
+    is_neon = 'neon.tech' in DATABASE_URL or 'sslmode' in DATABASE_URL or 'pooler' in DATABASE_URL
+    # For serverless / Neon connection pooler, conn_max_age=0 is recommended by Neon docs
+    conn_age = 0 if is_neon or not DEBUG else 600
+    
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=conn_age,
+            conn_health_checks=True,
+            ssl_require=True if is_neon else False
+        )
+    }
+    if is_neon:
+        DATABASES['default'].setdefault('OPTIONS', {})
+        DATABASES['default']['OPTIONS']['sslmode'] = 'require'
 else:
     DB_NAME = os.getenv('DB_NAME', 'skilljobs_db')
     DB_USER = os.getenv('DB_USER', 'postgres')
@@ -110,10 +100,19 @@ else:
         'PORT': DB_PORT,
     }
     
-    if check_postgres_connection(postgres_config):
-        DATABASES = {'default': postgres_config}
-    else:
-        print("[NOTICE] Local PostgreSQL not reachable. Using SQLite fallback for development.")
+    try:
+        import psycopg
+        with psycopg.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            dbname=DB_NAME,
+            connect_timeout=2
+        ):
+            DATABASES = {'default': postgres_config}
+    except Exception:
+        # Safe fallback for local development if PostgreSQL is offline
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
@@ -169,6 +168,19 @@ if raw_origins:
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ['*']
 CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
+
+# CSRF Trusted Origins for Vercel and Production API calls
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:5000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5000',
+]
+raw_csrf = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+if raw_csrf:
+    CSRF_TRUSTED_ORIGINS.extend([o.strip() for o in raw_csrf.split(',') if o.strip()])
 
 # Prevent 301 redirects on trailing slashes for React API compatibility
 APPEND_SLASH = False
