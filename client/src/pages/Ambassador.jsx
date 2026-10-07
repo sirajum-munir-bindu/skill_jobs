@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Zap, Shield, Users, Award, Briefcase, ChevronDown, Sparkles, Send, GraduationCap, Calendar, TrendingUp, RefreshCw, Camera, X } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
+import { DEFAULT_AMBASSADOR_CONFIG } from '../utils/defaultConfigs';
 import './Ambassador.css';
 
 const renderBenefitIcon = (iconName) => {
@@ -17,36 +18,46 @@ const renderBenefitIcon = (iconName) => {
 };
 
 const Ambassador = () => {
-  const [configs, setConfigs] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [configs, setConfigs] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_site_configs');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.ambassador) return parsed;
+      }
+    } catch {}
+    return DEFAULT_AMBASSADOR_CONFIG;
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({ university: '', reason: '', image: '', phone: '' });
   const [status, setStatus] = useState('');
-  const [activeUniversity, setActiveUniversity] = useState('');
+  const [activeUniversity, setActiveUniversity] = useState(() => {
+    const campuses = DEFAULT_AMBASSADOR_CONFIG?.ambassador?.campuses || [];
+    return campuses[0]?.key || 'DU';
+  });
   const [openFaqIdx, setOpenFaqIdx] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const navigate = useNavigate();
 
   const fetchConfigs = async () => {
-    setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`${API_BASE_URL}/api/configs`);
       if (res.ok) {
         const data = await res.json();
-        setConfigs(data);
-        const campuses = data?.ambassador?.campuses || [];
-        if (campuses.length > 0) {
-          setActiveUniversity(campuses[0].key);
+        if (data?.ambassador) {
+          setConfigs(data);
+          try {
+            localStorage.setItem('cached_site_configs', JSON.stringify(data));
+          } catch {}
+          const campuses = data.ambassador.campuses || [];
+          if (campuses.length > 0 && !activeUniversity) {
+            setActiveUniversity(campuses[0].key);
+          }
         }
-      } else {
-        throw new Error(`Server returned status ${res.status}`);
       }
     } catch (err) {
-      console.warn('Failed to fetch configs from server:', err);
-      setError('Could not reach server. The backend may be starting up or temporarily unavailable.');
-    } finally {
-      setLoading(false);
+      console.warn('Backend server offline or unreachable, using high-fidelity fallback data:', err);
     }
   };
 
@@ -157,7 +168,7 @@ const Ambassador = () => {
     );
   }
 
-  if (error || !configs?.ambassador) {
+  if (!configs?.ambassador) {
     return (
       <div className="ambassador-page">
         <div className="ambassador-bg-grid"></div>

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Mail, Users, Loader2, X, Phone, RefreshCw } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
+import { DEFAULT_AMBASSADOR_CONFIG } from '../utils/defaultConfigs';
 import './RunningAmbassadors.css';
 
 const formatDate = (dateStr) => {
@@ -14,25 +15,29 @@ const formatDate = (dateStr) => {
 const RunningAmbassadors = () => {
   const { university } = useParams();
   
-  const [configs, setConfigs] = useState({});
+  const [configs, setConfigs] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_site_configs');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return DEFAULT_AMBASSADOR_CONFIG;
+  });
   const [ambassadors, setAmbassadors] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedAmbassador, setSelectedAmbassador] = useState(null);
 
   const uniKey = (university || '').toUpperCase();
 
   const fetchConfigsAndAmbassadors = async () => {
-    setLoading(true);
-    setError(null);
     try {
       const [configsRes, ambassadorsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/configs`),
-        fetch(`${API_BASE_URL}/api/ambassadors`)
+        fetch(`${API_BASE_URL}/api/configs`).catch(() => null),
+        fetch(`${API_BASE_URL}/api/ambassadors`).catch(() => null)
       ]);
       
-      let loadedCampuses = [];
-      if (configsRes.ok) {
+      let loadedCampuses = DEFAULT_AMBASSADOR_CONFIG.ambassador.campuses || [];
+      if (configsRes && configsRes.ok) {
         const configsData = await configsRes.json();
         setConfigs(configsData);
         if (configsData.ambassador && configsData.ambassador.campuses) {
@@ -40,9 +45,10 @@ const RunningAmbassadors = () => {
         }
       }
       
-      if (ambassadorsRes.ok) {
+      const currentCampus = loadedCampuses.find(c => c.key?.toUpperCase() === uniKey) || {};
+      
+      if (ambassadorsRes && ambassadorsRes.ok) {
         const ambassadorsData = await ambassadorsRes.json();
-        const currentCampus = loadedCampuses.find(c => c.key?.toUpperCase() === uniKey) || {};
         
         // Filter dynamically
         const matched = ambassadorsData.filter(amb => {
@@ -63,13 +69,22 @@ const RunningAmbassadors = () => {
           
           return uniName.includes(keyLower) || (currentCampus.fullName && currentCampus.fullName.toLowerCase().includes(uniName));
         });
-        setAmbassadors(matched);
+        
+        if (matched.length > 0) {
+          setAmbassadors(matched);
+        } else if (currentCampus.leads && currentCampus.leads.length > 0) {
+          setAmbassadors(currentCampus.leads.map((l, idx) => ({ ...l, _id: `lead_${idx}` })));
+        } else {
+          setAmbassadors([]);
+        }
       } else {
-        throw new Error('Failed to fetch ambassadors directory');
+        // Fallback to configured campus leads
+        if (currentCampus.leads && currentCampus.leads.length > 0) {
+          setAmbassadors(currentCampus.leads.map((l, idx) => ({ ...l, _id: `lead_${idx}` })));
+        }
       }
     } catch (err) {
-      console.error('Error fetching dynamic ambassador directory data:', err);
-      setError('Unable to reach server. Please reload or check back in a moment.');
+      console.warn('Error fetching dynamic ambassador directory data, using fallback leads:', err);
     } finally {
       setLoading(false);
     }
