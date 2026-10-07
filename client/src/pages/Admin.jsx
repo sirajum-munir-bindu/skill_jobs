@@ -780,12 +780,12 @@ const Admin = () => {
         setShowUserModal(false);
         fetchData();
       } else {
-        const data = await response.json();
-        showToast(data.detail || data.message || 'Operation failed.', 'error');
+        const data = await response.json().catch(() => ({}));
+        showToast(data.detail || data.message || `Operation failed (${response.status}).`, 'error');
       }
     } catch (err) {
       console.error(err);
-      showToast('Network error processing user request.', 'error');
+      showToast('Network error: Unable to connect to backend server. Please ensure the Django server is running on http://localhost:5000.', 'error');
     }
   };
 

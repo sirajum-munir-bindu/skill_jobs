@@ -14,6 +14,9 @@ urlpatterns = [
     path('users/login', UserLoginView.as_view(), name='users-login-alias'),
     path('auth/update', UserProfileUpdateView.as_view(), name='auth-update'),
     path('users/bulk-delete', UserBulkDeleteView.as_view(), name='users-bulk-delete'),
+    path('users/bulk-delete/', UserBulkDeleteView.as_view(), name='users-bulk-delete-slash'),
     path('users', UserListCreateView.as_view(), name='users-list-create'),
+    path('users/', UserListCreateView.as_view(), name='users-list-create-slash'),
     path('users/<str:id>', UserDetailView.as_view(), name='users-detail'),
+    path('users/<str:id>/', UserDetailView.as_view(), name='users-detail-slash'),
 ]

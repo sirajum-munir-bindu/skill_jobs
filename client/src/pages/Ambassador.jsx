@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Zap, Shield, Users, Award, Briefcase, ChevronDown, Sparkles, Send, GraduationCap, Calendar, TrendingUp, RefreshCw } from 'lucide-react';
+import { CheckCircle, Zap, Shield, Users, Award, Briefcase, ChevronDown, Sparkles, Send, GraduationCap, Calendar, TrendingUp, RefreshCw, Camera, X } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import './Ambassador.css';
 
@@ -578,7 +578,9 @@ const Ambassador = () => {
                 margin: 'auto'
               }}
             >
-              <button className="modal-close-btn" onClick={() => { setShowApplyModal(false); setStatus(''); }}>&times;</button>
+              <button className="modal-close-btn" onClick={() => { setShowApplyModal(false); setStatus(''); }} title="Close">
+                <X size={18} />
+              </button>
               
               <div className="form-header-badge">
                 <Sparkles size={16} /> <span>Join Our Network</span>
@@ -597,8 +599,9 @@ const Ambassador = () => {
                           type="button" 
                           className="remove-avatar-btn"
                           onClick={() => setFormData({ ...formData, image: '' })}
+                          title="Remove photo"
                         >
-                          &times;
+                          <X size={14} />
                         </button>
                       </div>
                     ) : (
