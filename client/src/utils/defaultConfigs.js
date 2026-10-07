@@ -1,7 +1,7 @@
 /**
- * High-fidelity default and offline fallback configurations for Skill Jobs.
- * Guarantees that mobile and live deployments render immediately without crashing
- * if backend is temporarily starting up or unreachable.
+ * Clean default configurations for Skill Jobs.
+ * Only includes the active real chapters (DIU and Upay).
+ * No dummy universities, no dummy student leads.
  */
 
 export const DEFAULT_AMBASSADOR_CONFIG = {
@@ -45,76 +45,22 @@ export const DEFAULT_AMBASSADOR_CONFIG = {
     ],
     campuses: [
       {
-        key: "DU",
-        fullName: "Dhaka University",
-        color: "#7c3aed",
-        logo: "🏛️",
-        description: "Our DU Chapter is one of our most active student communities. We hold regular on-campus networking mixers, career counseling bootcamps, and mock interviews to prepare students for top tier internships.",
-        stats: { studentsReached: "1,500+", workshops: "12+", placementTrack: "92%" },
-        leads: [
-          { name: "Ayesha Rahman", role: "Campus Lead", dept: "CSE, 4th Year", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80" },
-          { name: "Sajid Islam", role: "Co-Lead", dept: "Marketing, 3rd Year", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80" }
-        ]
-      },
-      {
-        key: "JU",
-        fullName: "Jahangirnagar University",
-        color: "#ec4899",
-        logo: "🌿",
-        description: "The JU Chapter bridges the gap between academic theories and professional career practices, focusing on leadership summits and digital marketing events in a scenic green campus environment.",
-        stats: { studentsReached: "950+", workshops: "6+", placementTrack: "88%" },
-        leads: [
-          { name: "Nabila Hassan", role: "Campus Lead", dept: "Economics, 3rd Year", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80" },
-          { name: "Zuhair Alvi", role: "Co-Lead", dept: "IBA, 2nd Year", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80" }
-        ]
-      },
-      {
-        key: "RU",
-        fullName: "Rajshahi University",
-        color: "#3b82f6",
-        logo: "🎓",
-        description: "Our northern hub at RU drives technological innovation. We focus heavily on competitive programming bootcamps, resume audits, and soft-skills mentoring sessions for local corporate readiness.",
-        stats: { studentsReached: "1,100+", workshops: "8+", placementTrack: "90%" },
-        leads: [
-          { name: "Tanvir Ahmed", role: "Campus Lead", dept: "EEE, 4th Year", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&h=150&q=80" },
-          { name: "Ishrat Jahan", role: "Co-Lead", dept: "English, 3rd Year", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&h=150&q=80" }
-        ]
-      },
-      {
-        key: "CU",
-        fullName: "Chittagong University",
-        color: "#10b981",
-        logo: "⛰️",
-        description: "CU Chapter is empowering the port city youth. We hold cross-functional team hackathons, public speaking training programs, and direct corporate placement workshops at Chittagong.",
-        stats: { studentsReached: "850+", workshops: "5+", placementTrack: "85%" },
-        leads: [
-          { name: "Fariha Sultana", role: "Campus Lead", dept: "BBA, 3rd Year", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&h=150&q=80" },
-          { name: "Adnan Chowdhury", role: "Co-Lead", dept: "CSE, 4th Year", image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&h=150&q=80" }
-        ]
-      },
-      {
         key: "DIU",
         fullName: "Daffodil International University",
         color: "#f59e0b",
         logo: "💻",
         description: "A highly tech-focused hub at DIU Smart City campus. We run weekly coding masterclasses, product design sprints (using Figma), and showcase student project prototypes to our network of recruiters.",
-        stats: { studentsReached: "1,800+", workshops: "14+", placementTrack: "94%" },
-        leads: [
-          { name: "Mahir Asif", role: "Campus Lead", dept: "Software Engineering, 4th Year", image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=150&h=150&q=80" },
-          { name: "Lamia Kabir", role: "Co-Lead", dept: "English, 3rd Year", image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&h=150&q=80" }
-        ]
+        stats: { studentsReached: "150+", workshops: "14+", placementTrack: "94%" },
+        leads: []
       },
       {
-        key: "BUFT",
-        fullName: "BGMEA University of Fashion & Technology",
-        color: "#6366f1",
-        logo: "🎨",
-        description: "The BUFT Chapter focuses on apparel engineering, fashion design tech, digital branding, and product management. We connect creative students directly with top garments, retail, and tech companies.",
-        stats: { studentsReached: "700+", workshops: "4+", placementTrack: "86%" },
-        leads: [
-          { name: "Rashedul Bari", role: "Campus Lead", dept: "Apparel Engineering, 4th Year", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&h=150&q=80" },
-          { name: "Ananya Roy", role: "Co-Lead", dept: "Fashion Design, 3rd Year", image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=150&h=150&q=80" }
-        ]
+        key: "UPAY AMBASSADOR HUB",
+        fullName: "Upay",
+        color: "#0ea5e9",
+        logo: "💰",
+        description: "Welcome to the new chapter hub! Local events and leadership bootcamps are upcoming.",
+        stats: { studentsReached: "20+", workshops: "2+", placementTrack: "99%" },
+        leads: []
       }
     ]
   }

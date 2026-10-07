@@ -72,19 +72,14 @@ const RunningAmbassadors = () => {
         
         if (matched.length > 0) {
           setAmbassadors(matched);
-        } else if (currentCampus.leads && currentCampus.leads.length > 0) {
-          setAmbassadors(currentCampus.leads.map((l, idx) => ({ ...l, _id: `lead_${idx}` })));
         } else {
           setAmbassadors([]);
         }
       } else {
-        // Fallback to configured campus leads
-        if (currentCampus.leads && currentCampus.leads.length > 0) {
-          setAmbassadors(currentCampus.leads.map((l, idx) => ({ ...l, _id: `lead_${idx}` })));
-        }
+        setAmbassadors([]);
       }
     } catch (err) {
-      console.warn('Error fetching dynamic ambassador directory data, using fallback leads:', err);
+      console.warn('Error fetching dynamic ambassador directory data:', err);
     } finally {
       setLoading(false);
     }

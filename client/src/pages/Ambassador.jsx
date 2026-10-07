@@ -34,7 +34,7 @@ const Ambassador = () => {
   const [status, setStatus] = useState('');
   const [activeUniversity, setActiveUniversity] = useState(() => {
     const campuses = DEFAULT_AMBASSADOR_CONFIG?.ambassador?.campuses || [];
-    return campuses[0]?.key || 'DU';
+    return campuses[0]?.key || 'DIU';
   });
   const [openFaqIdx, setOpenFaqIdx] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
