@@ -8,7 +8,8 @@ class AmbassadorSerializer(serializers.ModelSerializer):
         model = Ambassador
         fields = [
             'id', '_id', 'name', 'email', 'university', 'reason', 'status',
-            'phone', 'dept', 'year', 'linkedin', 'role', 'image', 'password', 'createdAt'
+            'phone', 'dept', 'year', 'linkedin', 'role', 'image', 'password', 'createdAt',
+            'isAssessmentEligible'
         ]
 
     def get__id(self, obj):
@@ -27,6 +28,7 @@ class AmbassadorApplySerializer(serializers.Serializer):
     year = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
     linkedin = serializers.CharField(max_length=255, required=False, allow_blank=True, allow_null=True)
     status = serializers.CharField(max_length=100, default='Pending', required=False)
+    isAssessmentEligible = serializers.BooleanField(required=False, default=False)
 
 
 class AmbassadorUpdateSerializer(serializers.Serializer):
@@ -39,24 +41,33 @@ class AmbassadorUpdateSerializer(serializers.Serializer):
     role = serializers.CharField(max_length=100, required=False, allow_null=True, allow_blank=True)
     dept = serializers.CharField(max_length=100, required=False, allow_null=True, allow_blank=True)
     status = serializers.CharField(max_length=100, required=False, allow_null=True, allow_blank=True)
+    isAssessmentEligible = serializers.BooleanField(required=False)
 
 
 class AmbassadorStatusSerializer(serializers.Serializer):
-    status = serializers.ChoiceField(choices=['Pending', 'Approved', 'Rejected'])
+    status = serializers.ChoiceField(choices=['Pending', 'Approved', 'Rejected'], required=False)
+    isAssessmentEligible = serializers.BooleanField(required=False)
 
 
 class WorkReportSerializer(serializers.ModelSerializer):
     _id = serializers.SerializerMethodField()
+    ambassadorPhone = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkReport
         fields = [
-            'id', '_id', 'ambassadorEmail', 'ambassadorName', 'name', 'email',
+            'id', '_id', 'ambassadorEmail', 'ambassadorName', 'ambassadorPhone', 'name', 'email',
             'phone', 'institution', 'status', 'createdAt'
         ]
 
     def get__id(self, obj):
         return obj.id
+
+    def get_ambassadorPhone(self, obj):
+        if not obj.ambassadorEmail:
+            return ''
+        amb = Ambassador.objects.filter(email__iexact=obj.ambassadorEmail.strip()).first()
+        return amb.phone if amb and amb.phone else ''
 
 
 class WorkReportCreateSerializer(serializers.Serializer):

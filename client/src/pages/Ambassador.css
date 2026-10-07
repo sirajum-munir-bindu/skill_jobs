@@ -1198,3 +1198,144 @@
     padding: 1.25rem 1rem;
   }
 }
+
+/* Ambassador Dynamic Loading & Reload Sign */
+.ambassador-loading-container {
+  min-height: 75vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  position: relative;
+  z-index: 5;
+}
+
+.ambassador-loader-box {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+  border-radius: 24px;
+  padding: 3.5rem 2.5rem;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 50px -10px rgba(2, 132, 199, 0.15), 0 0 0 1px rgba(2, 132, 199, 0.05);
+  animation: fadeInLoader 0.3s ease-out;
+}
+
+.ambassador-loader-box.error-box {
+  border-color: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 20px 50px -10px rgba(239, 68, 68, 0.12);
+}
+
+.reload-icon-container {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0284c7;
+  border: 2px solid rgba(2, 132, 199, 0.25);
+}
+
+.reload-icon-container.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.reload-spin-icon {
+  animation: reloadSpin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes reloadSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInLoader {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--primary, #0f172a);
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.02em;
+}
+
+.loading-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.55;
+  margin-bottom: 1.75rem;
+}
+
+.loading-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(2, 132, 199, 0.1);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+}
+
+.loading-progress-bar {
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #06b6d4);
+  border-radius: 100px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: progressIndeterminate 1.5s infinite ease-in-out;
+}
+
+@keyframes progressIndeterminate {
+  0% {
+    left: -40%;
+  }
+  50% {
+    left: 40%;
+    width: 60%;
+  }
+  100% {
+    left: 100%;
+    width: 40%;
+  }
+}
+
+.reload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.85rem;
+  font-weight: 600;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+}
+
+.no-campus-card {
+  text-align: center;
+  padding: 3.5rem 2rem;
+  margin-top: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}

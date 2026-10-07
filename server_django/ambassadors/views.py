@@ -85,6 +85,8 @@ class AmbassadorDetailView(APIView):
             ambassador.image = data['image']
         if 'status' in data and data['status'] is not None:
             ambassador.status = data['status']
+        if 'isAssessmentEligible' in data and data['isAssessmentEligible'] is not None:
+            ambassador.isAssessmentEligible = data['isAssessmentEligible']
 
         ambassador.save()
 
@@ -100,14 +102,17 @@ class AmbassadorDetailView(APIView):
 
         serializer = AmbassadorStatusSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response({"detail": "Valid status is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Invalid update data.", "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        new_status = serializer.validated_data['status']
-        ambassador.status = new_status
+        if 'status' in serializer.validated_data and serializer.validated_data['status'] is not None:
+            ambassador.status = serializer.validated_data['status']
+        if 'isAssessmentEligible' in serializer.validated_data and serializer.validated_data['isAssessmentEligible'] is not None:
+            ambassador.isAssessmentEligible = serializer.validated_data['isAssessmentEligible']
+
         ambassador.save()
 
         return Response({
-            "message": f"Application status updated to {new_status}!",
+            "message": "Application status/assessment eligibility updated!",
             "application": AmbassadorSerializer(ambassador).data
         }, status=status.HTTP_200_OK)
 

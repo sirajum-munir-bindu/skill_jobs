@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Mail, Users, Loader2, X, Phone } from 'lucide-react';
+import { ArrowLeft, Mail, Users, Loader2, X, Phone, RefreshCw } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import './RunningAmbassadors.css';
 
@@ -14,128 +14,121 @@ const formatDate = (dateStr) => {
 const RunningAmbassadors = () => {
   const { university } = useParams();
   
-  const [configs, setConfigs] = useState({
-    ambassador: {
-      campuses: [
-        {
-          key: "DU",
-          fullName: "Dhaka University",
-          color: "#7c3aed",
-          logo: "🏛️",
-          description: "Our DU Chapter is one of our most active student communities. We hold regular on-campus networking mixers, career counseling bootcamps, and mock interviews to prepare students for top tier internships.",
-          stats: { studentsReached: "1,500+", workshops: "12+", placementTrack: "92%" }
-        },
-        {
-          key: "JU",
-          fullName: "Jahangirnagar University",
-          color: "#ec4899",
-          logo: "🌿",
-          description: "The JU Chapter bridges the gap between academic theories and professional career practices, focusing on leadership summits and digital marketing events in a scenic green campus environment.",
-          stats: { studentsReached: "950+", workshops: "6+", placementTrack: "88%" }
-        },
-        {
-          key: "RU",
-          fullName: "Rajshahi University",
-          color: "#3b82f6",
-          logo: "🎓",
-          description: "Our northern hub at RU drives technological innovation. We focus heavily on competitive programming bootcamps, resume audits, and soft-skills mentoring sessions for local corporate readiness.",
-          stats: { studentsReached: "1,100+", workshops: "8+", placementTrack: "90%" }
-        },
-        {
-          key: "CU",
-          fullName: "Chittagong University",
-          color: "#10b981",
-          logo: "⛰️",
-          description: "CU Chapter is empowering the port city youth. We hold cross-functional team hackathons, public speaking training programs, and direct corporate placement workshops at Chittagong.",
-          stats: { studentsReached: "850+", workshops: "5+", placementTrack: "85%" }
-        },
-        {
-          key: "DIU",
-          fullName: "Daffodil International University",
-          color: "#f59e0b",
-          logo: "💻",
-          description: "A highly tech-focused hub at DIU Smart City campus. We run weekly coding masterclasses, product design sprints (using Figma), and showcase student project prototypes to our network of recruiters.",
-          stats: { studentsReached: "1,800+", workshops: "14+", placementTrack: "94%" }
-        },
-        {
-          key: "BUFT",
-          fullName: "BGMEA University of Fashion & Technology",
-          color: "#6366f1",
-          logo: "🎨",
-          description: "The BUFT Chapter focuses on apparel engineering, fashion design tech, digital branding, and product management. We connect creative students directly with top garments, retail, and tech companies.",
-          stats: { studentsReached: "700+", workshops: "4+", placementTrack: "86%" }
-        }
-      ]
-    }
-  });
-
+  const [configs, setConfigs] = useState({});
   const [ambassadors, setAmbassadors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedAmbassador, setSelectedAmbassador] = useState(null);
 
-  const uniKey = university ? university.toUpperCase() : 'DU';
-  const campusesList = configs.ambassador?.campuses || [];
-  const uniInfo = campusesList.find(c => c.key === uniKey) || campusesList[0] || {
-    fullName: "Dhaka University",
-    color: "#7c3aed",
-    logo: "🏛️",
-    description: "Campus Chapter Lead Hub",
-    stats: { studentsReached: "1,000+", workshops: "8+", placementTrack: "90%" }
+  const uniKey = (university || '').toUpperCase();
+
+  const fetchConfigsAndAmbassadors = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [configsRes, ambassadorsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/configs`),
+        fetch(`${API_BASE_URL}/api/ambassadors`)
+      ]);
+      
+      let loadedCampuses = [];
+      if (configsRes.ok) {
+        const configsData = await configsRes.json();
+        setConfigs(configsData);
+        if (configsData.ambassador && configsData.ambassador.campuses) {
+          loadedCampuses = configsData.ambassador.campuses;
+        }
+      }
+      
+      if (ambassadorsRes.ok) {
+        const ambassadorsData = await ambassadorsRes.json();
+        const currentCampus = loadedCampuses.find(c => c.key?.toUpperCase() === uniKey) || {};
+        
+        // Filter dynamically
+        const matched = ambassadorsData.filter(amb => {
+          if (!amb.university) return false;
+          const uniName = amb.university.toLowerCase();
+          const keyLower = uniKey.toLowerCase();
+          
+          if (uniName === keyLower) return true;
+          if (currentCampus.fullName && uniName.includes(currentCampus.fullName.toLowerCase())) return true;
+          
+          // Substring or fallback matches
+          if (keyLower === 'du') return uniName.includes('dhaka') || uniName === 'du';
+          if (keyLower === 'ju') return uniName.includes('jahangirnagar') || uniName === 'ju';
+          if (keyLower === 'ru') return uniName.includes('rajshahi') || uniName === 'ru';
+          if (keyLower === 'cu') return uniName.includes('chittagong') || uniName === 'cu';
+          if (keyLower === 'diu') return uniName.includes('daffodil') || uniName === 'diu';
+          if (keyLower === 'buft') return uniName.includes('bgmea') || uniName.includes('fashion') || uniName === 'buft';
+          
+          return uniName.includes(keyLower) || (currentCampus.fullName && currentCampus.fullName.toLowerCase().includes(uniName));
+        });
+        setAmbassadors(matched);
+      } else {
+        throw new Error('Failed to fetch ambassadors directory');
+      }
+    } catch (err) {
+      console.error('Error fetching dynamic ambassador directory data:', err);
+      setError('Unable to reach server. Please reload or check back in a moment.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const fetchConfigsAndAmbassadors = async () => {
-      setLoading(true);
-      try {
-        const [configsRes, ambassadorsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/configs`),
-          fetch(`${API_BASE_URL}/api/ambassadors`)
-        ]);
-        
-        let loadedCampuses = [];
-        if (configsRes.ok) {
-          const configsData = await configsRes.json();
-          setConfigs(prev => ({ ...prev, ...configsData }));
-          if (configsData.ambassador && configsData.ambassador.campuses) {
-            loadedCampuses = configsData.ambassador.campuses;
-          }
-        }
-        
-        if (ambassadorsRes.ok) {
-          const ambassadorsData = await ambassadorsRes.json();
-          const targetCampuses = loadedCampuses.length > 0 ? loadedCampuses : configs.ambassador.campuses;
-          const currentCampus = targetCampuses.find(c => c.key === uniKey) || targetCampuses[0] || {};
-          
-          // Filter dynamically
-          const matched = ambassadorsData.filter(amb => {
-            if (!amb.university) return false;
-            const uniName = amb.university.toLowerCase();
-            const keyLower = uniKey.toLowerCase();
-            
-            if (uniName === keyLower) return true;
-            if (currentCampus.fullName && uniName.includes(currentCampus.fullName.toLowerCase())) return true;
-            
-            // Substring or fallback matches
-            if (keyLower === 'du') return uniName.includes('dhaka') || uniName === 'du';
-            if (keyLower === 'ju') return uniName.includes('jahangirnagar') || uniName === 'ju';
-            if (keyLower === 'ru') return uniName.includes('rajshahi') || uniName === 'ru';
-            if (keyLower === 'cu') return uniName.includes('chittagong') || uniName === 'cu';
-            if (keyLower === 'diu') return uniName.includes('daffodil') || uniName === 'diu';
-            if (keyLower === 'buft') return uniName.includes('bgmea') || uniName.includes('fashion') || uniName === 'buft';
-            
-            return uniName.includes(keyLower) || (currentCampus.fullName && currentCampus.fullName.toLowerCase().includes(uniName));
-          });
-          setAmbassadors(matched);
-        }
-      } catch (err) {
-        console.error('Error fetching dynamic ambassador directory data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchConfigsAndAmbassadors();
   }, [uniKey]);
+
+  if (loading) {
+    return (
+      <div className="running-ambassadors-page">
+        <div className="running-bg-grid"></div>
+        <div className="ambassador-loading-container" style={{ minHeight: '80vh' }}>
+          <div className="ambassador-loader-box">
+            <div className="reload-icon-container">
+              <RefreshCw className="reload-spin-icon" size={40} />
+            </div>
+            <h3 className="loading-title">Loading Ambassador Directory</h3>
+            <p className="loading-desc">Connecting to server and retrieving campus team for {uniKey || 'Hub'}...</p>
+            <div className="loading-progress-track">
+              <div className="loading-progress-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && ambassadors.length === 0) {
+    return (
+      <div className="running-ambassadors-page">
+        <div className="running-bg-grid"></div>
+        <div className="ambassador-loading-container" style={{ minHeight: '80vh' }}>
+          <div className="ambassador-loader-box error-box">
+            <div className="reload-icon-container error">
+              <RefreshCw size={36} />
+            </div>
+            <h3 className="loading-title">Unable to Load Directory</h3>
+            <p className="loading-desc">{error}</p>
+            <button onClick={fetchConfigsAndAmbassadors} className="btn btn-primary reload-btn">
+              <RefreshCw size={16} />
+              <span>Reload Directory</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const campusesList = configs.ambassador?.campuses || [];
+  const foundCampus = campusesList.find(c => c.key?.toUpperCase() === uniKey);
+  const uniInfo = foundCampus || {
+    fullName: `${uniKey} Campus Hub`,
+    color: '#0284c7',
+    logo: '🎓',
+    description: `Official ${uniKey} Campus Ambassador directory and student leadership team.`,
+    stats: null
+  };
 
   const activeAmbassadors = ambassadors.filter(a => a.status === 'Approved');
 

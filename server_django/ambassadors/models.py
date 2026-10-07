@@ -14,6 +14,7 @@ class Ambassador(models.Model):
     role = models.CharField(max_length=100, blank=True, null=True)
     image = models.TextField(blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
+    isAssessmentEligible = models.BooleanField(default=False)
     createdAt = models.CharField(max_length=100)
 
     class Meta:

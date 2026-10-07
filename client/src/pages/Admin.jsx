@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
@@ -30,6 +30,8 @@ const AVAILABLE_PERMISSIONS = [
   { id: 'ambassadors', label: 'Ambassador Applications', desc: 'Review, approve, and reject candidate applications', group: 'Management' },
   { id: 'ambassadordashboard', label: 'Ambassador Dashboard', desc: 'View all accounts created across ambassadors', group: 'Management' },
   { id: 'ambassadortasks', label: 'Ambassador Tasks & Targets', desc: 'Configure daily targets, bounty rates, and incentives', group: 'Management' },
+  { id: 'ambassadorassessment', label: 'Ambassador Assessment', desc: 'Audit ambassador work performance, account creation rates, and goal achievements in numbers and percentages', group: 'Management' },
+  { id: 'delete_ambassador_account', label: 'Delete Ambassador Account Registrations', desc: 'Allow this administrator to permanently delete candidate registrations/work reports in the Ambassador Dashboard', group: 'Management' },
   { id: 'ambassador_performance', label: 'Ambassador Performance Hub', desc: 'Grant ambassador access to view daily & monthly KPI matrix, target runs, and performance cycle', group: 'Ambassador Role Management' },
   { id: 'ambassador_workreport', label: 'Ambassador Work Report Submission', desc: 'Grant ambassador access to submit candidate registrations, account logs, and manage work reports', group: 'Ambassador Role Management' },
   { id: 'homepage', label: 'Homepage Content (CMS)', desc: 'Edit hero banner, stats counter, FAQs, and courses', group: 'Website Configuration' },
@@ -387,6 +389,13 @@ const Admin = () => {
 
   // Ambassador Work Reports State
   const [allWorkReports, setAllWorkReports] = useState([]);
+  const [workReportSearch, setWorkReportSearch] = useState('');
+
+  // Ambassador Assessment States
+  const [assessmentSearch, setAssessmentSearch] = useState('');
+  const [assessmentFilter, setAssessmentFilter] = useState('all');
+  const [assessmentSort, setAssessmentSort] = useState('progress');
+  const [selectedAssessmentAmbassador, setSelectedAssessmentAmbassador] = useState(null);
 
   // Ambassador Tasks & Metrics Modal States
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -408,7 +417,7 @@ const Admin = () => {
 
   // Ambassador Edit State
   const [isEditAmbassadorModalOpen, setIsEditAmbassadorModalOpen] = useState(false);
-  const [editingAmbassadorData, setEditingAmbassadorData] = useState({ id: '', name: '', email: '', phone: '', university: '', role: '', dept: '' });
+  const [editingAmbassadorData, setEditingAmbassadorData] = useState({ id: '', name: '', email: '', phone: '', university: '', role: '', dept: '', isAssessmentEligible: false });
 
   // Homepage CMS configurations states
   const [homepageConfigs, setHomepageConfigs] = useState({
@@ -854,8 +863,10 @@ const Admin = () => {
     if (Array.isArray(adminAuth?.permissions)) {
       return adminAuth.permissions.includes(moduleKey);
     }
-    return true;
+    return false;
   };
+
+  const canDeleteWorkReport = isSuperAdmin || hasPermission('delete_ambassador_account') || hasPermission('ambassador_workreport_delete') || hasPermission('delete_work_report');
 
   const handleQuickChangeRole = async (user, newRole) => {
     const uid = String(user._id || user.id);
@@ -1259,6 +1270,32 @@ const Admin = () => {
     }
   };
 
+  // Toggle Ambassador Assessment tracking eligibility
+  const handleToggleAssessmentEligible = async (id, newEligible) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ambassadors/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isAssessmentEligible: newEligible })
+      });
+
+      if (response.ok) {
+        showToast(
+          newEligible 
+            ? 'Ambassador specified for Assessment Tracking!' 
+            : 'Ambassador removed from Assessment Tracking.',
+          'success'
+        );
+        fetchData();
+      } else {
+        showToast('Failed to update assessment eligibility.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Network error updating assessment eligibility.', 'error');
+    }
+  };
+
   // Delete Ambassador Application API call
   const handleDeleteAmbassador = async (id) => {
     if (!window.confirm('Confirm delete application record? This cannot be undone.')) {
@@ -1305,9 +1342,14 @@ const Admin = () => {
     }
   };
 
-  // Delete Ambassador Work Report / Account Registration
-  const handleDeleteWorkReport = async (reportId) => {
-    if (!window.confirm('Are you sure you want to delete this registered account entry? This cannot be undone.')) {
+  // Delete Ambassador Work Report / Account Registration (Permission-Gated)
+  const handleDeleteWorkReport = async (reportId, reportName = 'this candidate') => {
+    if (!canDeleteWorkReport) {
+      showToast('Permission denied. Super Admin must grant you delete permission for Ambassador Accounts.', 'error');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to permanently delete the registration entry for "${reportName}"? This cannot be undone.`)) {
       return;
     }
 
@@ -1317,10 +1359,11 @@ const Admin = () => {
       });
 
       if (response.ok) {
-        showToast('Account registration entry deleted.', 'success');
+        showToast('Account registration entry deleted successfully.', 'success');
         setAllWorkReports(prev => prev.filter(r => r._id !== reportId && r.id !== reportId));
       } else {
-        showToast('Failed to delete registration entry.', 'error');
+        const data = await response.json().catch(() => ({}));
+        showToast(data.detail || data.message || 'Failed to delete registration entry.', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -1330,13 +1373,14 @@ const Admin = () => {
 
   const handleEditAmbassador = (app) => {
     setEditingAmbassadorData({
-      id: app._id,
+      id: app._id || app.id,
       name: app.name || '',
       email: app.email || '',
       phone: app.phone || '',
       university: app.university || '',
       role: app.role || '',
-      dept: app.dept || ''
+      dept: app.dept || '',
+      isAssessmentEligible: app.isAssessmentEligible === true
     });
     setIsEditAmbassadorModalOpen(true);
   };
@@ -1458,6 +1502,158 @@ const Admin = () => {
     m.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.message.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const effectiveWorkReportQuery = (workReportSearch || (activeTab === 'ambassadordashboard' ? searchQuery : '')).trim().toLowerCase();
+  const filteredWorkReports = allWorkReports.filter(r => {
+    if (!effectiveWorkReportQuery) return true;
+    const nameMatch = r.name && r.name.toLowerCase().includes(effectiveWorkReportQuery);
+    const emailMatch = r.email && r.email.toLowerCase().includes(effectiveWorkReportQuery);
+    const phoneMatch = r.phone && r.phone.toLowerCase().includes(effectiveWorkReportQuery);
+    const instMatch = r.institution && r.institution.toLowerCase().includes(effectiveWorkReportQuery);
+    const ambEmailMatch = r.ambassadorEmail && r.ambassadorEmail.toLowerCase().includes(effectiveWorkReportQuery);
+    const ambNameMatch = r.ambassadorName && r.ambassadorName.toLowerCase().includes(effectiveWorkReportQuery);
+    const ambApp = ambassadors.find(a => a.email === r.ambassadorEmail);
+    const ambPhone = (r.ambassadorPhone || ambApp?.phone || '').toLowerCase();
+    const ambPhoneMatch = ambPhone.includes(effectiveWorkReportQuery);
+    const statusMatch = r.status && r.status.toLowerCase().includes(effectiveWorkReportQuery);
+    return Boolean(nameMatch || emailMatch || phoneMatch || instMatch || ambEmailMatch || ambNameMatch || ambPhoneMatch || statusMatch);
+  });
+
+  // Comprehensive list of Ambassadors APPROVED by Super Admin & their performance assessment
+  const assessmentAmbassadors = useMemo(() => {
+    const ambassadorMap = new Map();
+
+    // 1. Scan ambassadors collection for all candidates APPROVED by Super Admin AND specified for assessment
+    ambassadors.forEach(a => {
+      if (!a.email) return;
+      const isApproved = (a.status && a.status.toLowerCase() === 'approved');
+      if (!isApproved) return;
+
+      const emailKey = a.email.toLowerCase();
+      // Exclude Super Admin / Admin email
+      if (emailKey === 'admin@skill.jobs') return;
+
+      // Must be specifically designated for assessment by Super Admin
+      if (a.isAssessmentEligible !== true) return;
+
+      // Look for a matching user account if they created one
+      const userAcc = users.find(u => u.email && u.email.toLowerCase() === emailKey && u.role !== 'Super Admin' && u.role !== 'Admin');
+
+      ambassadorMap.set(emailKey, {
+        id: a.id || userAcc?.id,
+        name: a.name || userAcc?.name || 'Ambassador',
+        email: a.email,
+        phone: a.phone || userAcc?.phone || '',
+        university: a.university || 'Campus Member',
+        dept: a.dept || '',
+        role: userAcc?.role || 'Campus Ambassador',
+        status: 'Approved',
+        isAssessmentEligible: true,
+        createdAt: userAcc?.createdAt || a.createdAt || '',
+        hasUserAccount: Boolean(userAcc)
+      });
+    });
+
+    // 2. Scan users collection for any user assigned Ambassador role who is approved and specified for assessment
+    users.forEach(u => {
+      if (!u.email) return;
+      const emailKey = u.email.toLowerCase();
+
+      // Strictly exclude Super Admin & Admin accounts
+      if (u.role === 'Super Admin' || u.role === 'Admin' || emailKey === 'admin@skill.jobs') return;
+
+      // If already added from approved ambassadors, skip
+      if (ambassadorMap.has(emailKey)) return;
+
+      const ambApp = ambassadors.find(a => a.email && a.email.toLowerCase() === emailKey);
+      
+      // Must be approved by Super Admin AND specified for assessment
+      const isApprovedApp = ambApp && (ambApp.status && ambApp.status.toLowerCase() === 'approved');
+      const isEligible = ambApp && ambApp.isAssessmentEligible === true;
+
+      if (isApprovedApp && isEligible) {
+        ambassadorMap.set(emailKey, {
+          id: u.id,
+          name: u.name || ambApp?.name || 'Ambassador',
+          email: u.email,
+          phone: ambApp?.phone || u.phone || '',
+          university: ambApp?.university || 'Campus Member',
+          dept: ambApp?.dept || '',
+          role: u.role || 'Campus Ambassador',
+          status: 'Approved',
+          isAssessmentEligible: true,
+          createdAt: u.createdAt || ambApp?.createdAt || '',
+          hasUserAccount: true
+        });
+      }
+    });
+
+    const monthlyTarget = homepageConfigs.ambassadorMetrics?.monthlyTarget || ((homepageConfigs.ambassadorMetrics?.todayTarget || 5) * 30);
+    const incentivePerQAA = homepageConfigs.ambassadorMetrics?.incentivePerQAA || 40;
+    const todayStr = new Date().toDateString();
+
+    return Array.from(ambassadorMap.values()).map(amb => {
+      const emailLower = (amb.email || '').toLowerCase();
+      const ambReports = allWorkReports.filter(r => r.ambassadorEmail && r.ambassadorEmail.toLowerCase() === emailLower);
+
+      const totalAccounts = ambReports.length;
+      const approvedAccounts = ambReports.filter(r => r.status === 'Approved' || r.status === 'Accepted').length;
+      const pendingAccounts = ambReports.filter(r => !r.status || r.status === 'Pending').length;
+      const rejectedAccounts = ambReports.filter(r => r.status === 'Rejected').length;
+      const todayAccounts = ambReports.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === todayStr).length;
+
+      const progressPercent = monthlyTarget > 0 ? Math.round((approvedAccounts / monthlyTarget) * 100) : 0;
+      const successRate = totalAccounts > 0 ? Math.round((approvedAccounts / totalAccounts) * 100) : 0;
+      const earnedBounty = approvedAccounts * incentivePerQAA;
+
+      let tier = 'Inactive';
+      if (progressPercent >= 80) tier = 'Elite';
+      else if (progressPercent >= 50) tier = 'On Track';
+      else if (totalAccounts > 0) tier = 'Needs Push';
+
+      return {
+        ...amb,
+        reports: ambReports,
+        totalAccounts,
+        approvedAccounts,
+        pendingAccounts,
+        rejectedAccounts,
+        todayAccounts,
+        monthlyTarget,
+        progressPercent,
+        successRate,
+        earnedBounty,
+        tier
+      };
+    });
+  }, [users, ambassadors, allWorkReports, homepageConfigs]);
+
+  const filteredAssessmentAmbassadors = useMemo(() => {
+    return assessmentAmbassadors
+      .filter(amb => {
+        const q = (assessmentSearch || (activeTab === 'ambassadorassessment' ? searchQuery : '')).trim().toLowerCase();
+        if (q) {
+          const matchName = amb.name && amb.name.toLowerCase().includes(q);
+          const matchEmail = amb.email && amb.email.toLowerCase().includes(q);
+          const matchPhone = amb.phone && amb.phone.toLowerCase().includes(q);
+          const matchUniv = amb.university && amb.university.toLowerCase().includes(q);
+          if (!matchName && !matchEmail && !matchPhone && !matchUniv) return false;
+        }
+
+        if (assessmentFilter === 'high') return amb.progressPercent >= 80;
+        if (assessmentFilter === 'medium') return amb.progressPercent >= 50 && amb.progressPercent < 80;
+        if (assessmentFilter === 'low') return amb.progressPercent < 50 && amb.totalAccounts > 0;
+        if (assessmentFilter === 'zero') return amb.totalAccounts === 0;
+        return true;
+      })
+      .sort((a, b) => {
+        if (assessmentSort === 'progress') return b.progressPercent - a.progressPercent;
+        if (assessmentSort === 'approved') return b.approvedAccounts - a.approvedAccounts;
+        if (assessmentSort === 'total') return b.totalAccounts - a.totalAccounts;
+        if (assessmentSort === 'name') return (a.name || '').localeCompare(b.name || '');
+        return b.progressPercent - a.progressPercent;
+      });
+  }, [assessmentAmbassadors, assessmentSearch, searchQuery, activeTab, assessmentFilter, assessmentSort]);
 
   // Compute stat boxes values
   const pendingApps = ambassadors.filter(a => a.status === 'Pending').length;
@@ -1864,6 +2060,7 @@ const Admin = () => {
                     setAmbassadorDropdownOpen(true);
                     setActiveTab('ambassadordashboard');
                     setSearchQuery('');
+                    setWorkReportSearch('');
                     setSidebarOpen(false);
                   }}
                 >
@@ -1885,17 +2082,30 @@ const Admin = () => {
                 </button>
               )}
 
-              {/* Nested Sub-Item: Ambassador Task */}
-              {hasPermission('ambassadortasks') && ambassadorDropdownOpen && (
+              {/* Nested Sub-Items: Ambassador Task & Ambassador Assessment */}
+              {ambassadorDropdownOpen && (
                 <div className="sidebar-subnav-group">
-                  <button 
-                    className={`sidebar-subnav-item ${activeTab === 'ambassadortasks' ? 'active' : ''}`}
-                    onClick={() => { setActiveTab('ambassadortasks'); setSearchQuery(''); setSidebarOpen(false); }}
-                  >
-                    <Target size={15} />
-                    <span>Ambassador Task</span>
-                    {activeTab === 'ambassadortasks' && <span className="active-indicator" />}
-                  </button>
+                  {hasPermission('ambassadortasks') && (
+                    <button 
+                      className={`sidebar-subnav-item ${activeTab === 'ambassadortasks' ? 'active' : ''}`}
+                      onClick={() => { setActiveTab('ambassadortasks'); setSearchQuery(''); setWorkReportSearch(''); setAssessmentSearch(''); setSidebarOpen(false); }}
+                    >
+                      <Target size={15} />
+                      <span>Ambassador Task</span>
+                      {activeTab === 'ambassadortasks' && <span className="active-indicator" />}
+                    </button>
+                  )}
+
+                  {(isSuperAdmin || hasPermission('ambassadorassessment') || hasPermission('ambassadordashboard')) && (
+                    <button 
+                      className={`sidebar-subnav-item ${activeTab === 'ambassadorassessment' ? 'active' : ''}`}
+                      onClick={() => { setActiveTab('ambassadorassessment'); setSearchQuery(''); setWorkReportSearch(''); setAssessmentSearch(''); setSidebarOpen(false); }}
+                    >
+                      <BarChart3 size={15} />
+                      <span>Ambassador Assessment</span>
+                      {activeTab === 'ambassadorassessment' && <span className="active-indicator" />}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -2012,6 +2222,7 @@ const Admin = () => {
                 {activeTab === 'ambassadors' && "Ambassador Applications"}
                 {activeTab === 'ambassadordashboard' && "Ambassador Dashboard - Total Created Accounts"}
                 {activeTab === 'ambassadortasks' && "Ambassador Tasks & Performance Control"}
+                {activeTab === 'ambassadorassessment' && "Ambassador Assessment - Work Performance Matrix"}
                 {activeTab === 'nfc_cards' && "NFC Smart Cards Management"}
                 {activeTab === 'homepage' && "Homepage Content"}
                 {activeTab === 'aboutpage' && "About Page"}
@@ -2032,6 +2243,8 @@ const Admin = () => {
                 placeholder={
                   activeTab === 'users' ? "Search users by name, email, role..." :
                   activeTab === 'ambassadors' ? "Search applications..." :
+                  activeTab === 'ambassadordashboard' ? "Search accounts by name, email, phone..." :
+                  activeTab === 'ambassadorassessment' ? "Search ambassadors by name, email, phone..." :
                   activeTab === 'contactmessages' ? "Search messages..." :
                   "Search across control panel..."
                 }
@@ -2089,7 +2302,11 @@ const Admin = () => {
         {/* CONTENT BODY */}
         <div className="admin-content-body">
           {/* STATISTICS CARDS - Only show on specific management tabs */}
-          {activeTab !== null && activeTab !== 'ambassadordashboard' && activeTab !== 'ambassadortasks' && activeTab !== 'ambassador-task' && (
+          {activeTab !== null && 
+           activeTab !== 'ambassadordashboard' && 
+           activeTab !== 'ambassadortasks' && 
+           activeTab !== 'ambassador-task' && 
+           activeTab !== 'ambassadorassessment' && (
             <div className="saas-stats-grid">
               <div className={`saas-stat-card ${activeTab === 'users' ? 'active' : ''}`}>
                 <div className="saas-stat-content">
@@ -2477,8 +2694,69 @@ const Admin = () => {
                 {/* 2. TABLE HEADER */}
                 <div className="saas-section-header" style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--saas-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div className="saas-section-title">
-                    <h3>All Ambassador Account Registrations ({allWorkReports.length})</h3>
-                    <p>Audit and moderate student accounts. Balance is added to the ambassador only when you Accept.</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                      <h3 style={{ margin: 0 }}>All Ambassador Account Registrations ({allWorkReports.length})</h3>
+                      {effectiveWorkReportQuery && (
+                        <span style={{ 
+                          fontSize: '0.82rem', 
+                          fontWeight: '750', 
+                          color: '#0284c7', 
+                          background: '#e0f2fe', 
+                          padding: '0.2rem 0.65rem', 
+                          borderRadius: '20px',
+                          border: '1px solid #bae6fd' 
+                        }}>
+                          {filteredWorkReports.length} {filteredWorkReports.length === 1 ? 'account' : 'accounts'} found
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ margin: '0.35rem 0 0 0' }}>Audit and moderate student accounts. Balance is added to the ambassador only when you Accept.</p>
+                  </div>
+
+                  <div className="saas-section-actions">
+                    <div className="saas-toolbar-search" style={{ minWidth: '320px', maxWidth: '420px', width: '100%', position: 'relative' }}>
+                      <Search className="saas-search-icon" size={16} />
+                      <input 
+                        type="text" 
+                        className="saas-search-input" 
+                        placeholder="Search account by name, email, or phone..." 
+                        value={workReportSearch || (activeTab === 'ambassadordashboard' ? searchQuery : '')}
+                        onChange={(e) => {
+                          setWorkReportSearch(e.target.value);
+                          if (activeTab === 'ambassadordashboard' && searchQuery) {
+                            setSearchQuery('');
+                          }
+                        }}
+                        style={{ paddingRight: (workReportSearch || (activeTab === 'ambassadordashboard' && searchQuery)) ? '2.4rem' : '1rem' }}
+                      />
+                      {(workReportSearch || (activeTab === 'ambassadordashboard' && searchQuery)) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setWorkReportSearch('');
+                            setSearchQuery('');
+                          }}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            color: '#94a3b8',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '4px',
+                            borderRadius: '50%'
+                          }}
+                          title="Clear search"
+                        >
+                          <X size={15} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -2492,35 +2770,52 @@ const Admin = () => {
                   </div>
                 ) : (
                   <div className="table-container" style={{ margin: '1.5rem', overflowX: 'auto' }}>
-                    <table className="admin-table" style={{ width: '100%', minWidth: '1050px' }}>
+                    <table className="admin-table" style={{ width: '100%', minWidth: '950px' }}>
                       <thead>
                         <tr>
                           <th style={{ width: '50px', padding: '1rem 1.25rem' }}>#</th>
                           <th style={{ minWidth: '170px', padding: '1rem 1.25rem' }}>Candidate Name</th>
-                          <th style={{ minWidth: '200px', padding: '1rem 1.25rem' }}>Email Address</th>
                           <th style={{ minWidth: '140px', padding: '1rem 1.25rem' }}>Phone Number</th>
-                          <th style={{ minWidth: '190px', padding: '1rem 1.25rem' }}>Institution / Campus</th>
                           <th style={{ minWidth: '200px', padding: '1rem 1.25rem' }}>Submitted By (Ambassador)</th>
+                          <th style={{ minWidth: '160px', padding: '1rem 1.25rem' }}>Ambassador Phone</th>
                           <th style={{ minWidth: '110px', padding: '1rem 1.25rem' }}>Date</th>
                           <th style={{ minWidth: '140px', padding: '1rem 1.25rem', textAlign: 'center' }}>Status</th>
-                          <th style={{ minWidth: '220px', padding: '1rem 1.25rem', textAlign: 'center' }}>Admin Action</th>
+                          <th style={{ minWidth: '290px', padding: '1rem 1.25rem', textAlign: 'center' }}>Admin Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {allWorkReports
-                          .filter(r => {
-                            const q = searchQuery.toLowerCase();
-                            return (
-                              !searchQuery ||
-                              (r.name && r.name.toLowerCase().includes(q)) ||
-                              (r.email && r.email.toLowerCase().includes(q)) ||
-                              (r.phone && r.phone.toLowerCase().includes(q)) ||
-                              (r.institution && r.institution.toLowerCase().includes(q)) ||
-                              (r.ambassadorEmail && r.ambassadorEmail.toLowerCase().includes(q)) ||
-                              (r.status && r.status.toLowerCase().includes(q))
-                            );
-                          })
-                          .map((report, idx) => {
+                        {filteredWorkReports.length === 0 ? (
+                          <tr>
+                            <td colSpan="8" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: '#64748b' }}>
+                              <Search size={36} style={{ color: '#cbd5e1', marginBottom: '0.75rem', display: 'inline-block' }} />
+                              <h4 style={{ margin: '0 0 0.35rem', color: '#334155', fontWeight: '750' }}>No matching accounts found</h4>
+                              <p style={{ margin: '0 0 1rem', fontSize: '0.9rem' }}>
+                                No registrations matched "{effectiveWorkReportQuery}". Try searching with a different name, email, or phone.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setWorkReportSearch('');
+                                  setSearchQuery('');
+                                }}
+                                style={{
+                                  padding: '0.5rem 1.25rem',
+                                  background: '#0284c7',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  color: '#ffffff',
+                                  fontWeight: '700',
+                                  fontSize: '0.85rem',
+                                  cursor: 'pointer',
+                                  boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
+                                }}
+                              >
+                                Clear Search
+                              </button>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredWorkReports.map((report, idx) => {
                             const reportStatus = report.status || 'Pending';
                             const isApproved = reportStatus === 'Approved' || reportStatus === 'Accepted';
                             const isRejected = reportStatus === 'Rejected';
@@ -2552,13 +2847,7 @@ const Admin = () => {
                                   </div>
                                 </td>
                                 <td style={{ padding: '1.1rem 1.25rem' }}>
-                                  <span style={{ color: '#0284c7', fontWeight: '500', fontSize: '0.9rem' }}>{report.email}</span>
-                                </td>
-                                <td style={{ padding: '1.1rem 1.25rem' }}>
                                   <span style={{ color: '#475569', fontWeight: '600', fontSize: '0.9rem' }}>{report.phone}</span>
-                                </td>
-                                <td style={{ padding: '1.1rem 1.25rem' }}>
-                                  <span style={{ color: '#334155', fontSize: '0.9rem' }}>{report.institution || 'Dhaka University'}</span>
                                 </td>
                                 <td style={{ padding: '1.1rem 1.25rem' }}>
                                   {(() => {
@@ -2577,6 +2866,36 @@ const Admin = () => {
                                       }}>
                                         {displayName}
                                       </span>
+                                    );
+                                  })()}
+                                </td>
+                                <td style={{ padding: '1.1rem 1.25rem' }}>
+                                  {(() => {
+                                    const ambUser = users.find(u => u.email === report.ambassadorEmail);
+                                    const ambApp = ambassadors.find(a => a.email === report.ambassadorEmail);
+                                    const ambPhone = report.ambassadorPhone || ambApp?.phone || ambUser?.phone;
+                                    return ambPhone ? (
+                                      <a 
+                                        href={`tel:${ambPhone}`}
+                                        style={{
+                                          color: '#0284c7',
+                                          fontWeight: '600',
+                                          fontSize: '0.88rem',
+                                          textDecoration: 'none',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '0.4rem',
+                                          background: 'rgba(2, 132, 199, 0.08)',
+                                          padding: '0.3rem 0.65rem',
+                                          borderRadius: '8px',
+                                          border: '1px solid rgba(2, 132, 199, 0.2)'
+                                        }}
+                                      >
+                                        <Phone size={12} color="#0284c7" />
+                                        <span>{ambPhone}</span>
+                                      </a>
+                                    ) : (
+                                      <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>—</span>
                                     );
                                   })()}
                                 </td>
@@ -2681,11 +3000,46 @@ const Admin = () => {
                                       <X size={14} />
                                       <span>Reject</span>
                                     </button>
+
+                                    {/* DELETE BUTTON (PERMISSION-BASED: SUPER ADMIN OR PERMITTED ADMIN) */}
+                                    {canDeleteWorkReport && (
+                                      <button
+                                        onClick={() => handleDeleteWorkReport(report._id || report.id, report.name)}
+                                        title="Delete account registration entry (Permission Granted)"
+                                        style={{
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '4px',
+                                          padding: '0.45rem 0.8rem',
+                                          borderRadius: '8px',
+                                          border: '1px solid rgba(239, 68, 68, 0.4)',
+                                          background: 'rgba(239, 68, 68, 0.08)',
+                                          color: '#dc2626',
+                                          fontWeight: '700',
+                                          fontSize: '0.8rem',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.background = '#ef4444';
+                                          e.currentTarget.style.color = '#ffffff';
+                                          e.currentTarget.style.borderColor = '#ef4444';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                                          e.currentTarget.style.color = '#dc2626';
+                                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                                        }}
+                                      >
+                                        <Trash2 size={14} />
+                                        <span>Delete</span>
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
                             );
-                          })}
+                          }))}
                       </tbody>
                     </table>
                   </div>
@@ -2696,122 +3050,893 @@ const Admin = () => {
               <div className="cms-page-editor">
                 {/* 1. HERO OPERATIONAL CALCULATOR & LIVE RUN RATE PREVIEW */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                  borderRadius: '16px',
-                  padding: '1.75rem 2rem',
+                  background: 'linear-gradient(135deg, #0b1329 0%, #111d38 50%, #0f172a 100%)',
+                  borderRadius: '20px',
+                  padding: '2rem 2.25rem',
                   color: '#ffffff',
                   marginBottom: '2rem',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.25)'
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 20px 40px -10px rgba(11, 19, 41, 0.4), 0 0 0 1px rgba(255,255,255,0.05)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <Zap size={13} color="#f59e0b" /> Live Calculation Preview
+                  {/* Subtle decorative glow */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '-60px',
+                    right: '-60px',
+                    width: '220px',
+                    height: '220px',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, transparent 70%)',
+                    pointerEvents: 'none'
+                  }} />
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem', position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <span style={{
+                        background: 'rgba(56, 189, 248, 0.12)',
+                        color: '#38bdf8',
+                        padding: '0.35rem 0.9rem',
+                        borderRadius: '30px',
+                        fontSize: '0.78rem',
+                        fontWeight: '800',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                        border: '1px solid rgba(56, 189, 248, 0.25)'
+                      }}>
+                        <Zap size={14} color="#f59e0b" /> Live Calculation Preview
                       </span>
-                      <span style={{ fontSize: '0.8rem', background: '#22c55e', color: '#ffffff', padding: '0.2rem 0.6rem', borderRadius: '12px', fontWeight: '700' }}>
-                        LIVE PREVIEW
+                      <span style={{
+                        fontSize: '0.78rem',
+                        background: 'rgba(34, 197, 94, 0.15)',
+                        color: '#4ade80',
+                        padding: '0.35rem 0.85rem',
+                        borderRadius: '30px',
+                        fontWeight: '800',
+                        border: '1px solid rgba(74, 222, 128, 0.3)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.45rem'
+                      }}>
+                        <span className="pulse-green-dot" style={{ width: '6px', height: '6px' }} /> LIVE PREVIEW
                       </span>
+                    </div>
+
+                    <div style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: '500' }}>
+                      Auto-synced with all Campus Ambassador portals
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '600' }}>Today's Target</span>
-                      <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#38bdf8', marginTop: '0.25rem' }}>
-                        {homepageConfigs.ambassadorMetrics?.todayTarget || 0} <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>accounts/day</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', position: 'relative', zIndex: 1 }}>
+                    {/* Stat 1: Today's Target */}
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      padding: '1.4rem',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      backdropFilter: 'blur(10px)',
+                      borderTop: '3px solid #38bdf8'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <Target size={16} color="#38bdf8" />
+                        <span style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '750', letterSpacing: '0.05em' }}>
+                          Today's Target
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#38bdf8', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                        {homepageConfigs.ambassadorMetrics?.todayTarget || 0}{' '}
+                        <span style={{ fontSize: '0.9rem', color: '#cbd5e1', fontWeight: '600' }}>accounts/day</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.5rem' }}>
+                        Daily outreach quota per ambassador
                       </div>
                     </div>
 
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '600' }}>Monthly Target (30 Days)</span>
-                      <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#a78bfa', marginTop: '0.25rem' }}>
-                        {((homepageConfigs.ambassadorMetrics?.todayTarget || 0) * 30)} <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>accounts/mo</span>
+                    {/* Stat 2: Monthly Target */}
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      padding: '1.4rem',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      backdropFilter: 'blur(10px)',
+                      borderTop: '3px solid #a78bfa'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <TrendingUp size={16} color="#a78bfa" />
+                        <span style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '750', letterSpacing: '0.05em' }}>
+                          Monthly Target (30 Days)
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#a78bfa', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                        {((homepageConfigs.ambassadorMetrics?.todayTarget || 0) * 30)}{' '}
+                        <span style={{ fontSize: '0.9rem', color: '#cbd5e1', fontWeight: '600' }}>accounts/mo</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.5rem' }}>
+                        Standardized 30-day performance goal
                       </div>
                     </div>
 
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1.2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '600' }}>Incentive Rate</span>
-                      <div style={{ fontSize: '2.2rem', fontWeight: '900', color: '#34d399', marginTop: '0.25rem' }}>
-                        ৳{homepageConfigs.ambassadorMetrics?.incentivePerQAA || 0} <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>/ account</span>
+                    {/* Stat 3: Incentive Rate */}
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      padding: '1.4rem',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      backdropFilter: 'blur(10px)',
+                      borderTop: '3px solid #34d399'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <Award size={16} color="#34d399" />
+                        <span style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '750', letterSpacing: '0.05em' }}>
+                          Incentive Rate
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#34d399', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                        ৳{homepageConfigs.ambassadorMetrics?.incentivePerQAA || 0}{' '}
+                        <span style={{ fontSize: '0.9rem', color: '#cbd5e1', fontWeight: '600' }}>/ account</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.5rem' }}>
+                        Credited to Approved Balance upon acceptance
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. DYNAMIC METRICS CONTROLLER FORM */}
-                <div className="cms-editor-card" style={{ marginBottom: '2rem' }}>
-                  <div className="cms-card-header">
-                    <h4>Ambassador Live Target & Incentive Controller</h4>
-                    <p>Configure the daily account target and per-account bounty. Monthly target is automatically converted for all Ambassadors.</p>
+                <div className="target-controller-card">
+                  <div className="target-card-header">
+                    <div className="target-header-left">
+                      <div className="target-header-icon">
+                        <Sliders size={24} />
+                      </div>
+                      <div className="target-header-title">
+                        <h4>Ambassador Live Target & Incentive Controller</h4>
+                        <p>Configure daily account quotas and individual bounties. Monthly quotas and earnings are auto-calculated in real time.</p>
+                      </div>
+                    </div>
+
+                    <span style={{
+                      background: '#f1f5f9',
+                      color: '#475569',
+                      fontSize: '0.8rem',
+                      fontWeight: '700',
+                      padding: '0.35rem 0.85rem',
+                      borderRadius: '20px',
+                      border: '1px solid #e2e8f0',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem'
+                    }}>
+                      <SlidersHorizontal size={13} /> Live Settings Engine
+                    </span>
                   </div>
-                  <div className="cms-card-body">
-                    <form onSubmit={handleSaveAmbassadorMetrics} className="admin-form">
-                      <div className="grid-2" style={{ display: 'grid', gap: '1.25rem', gridTemplateColumns: '1fr 1fr', marginBottom: '1.5rem' }}>
-                        <div className="form-group">
-                          <label>Today's Target (Accounts / Day) *</label>
-                          <input 
-                            type="number" 
-                            value={homepageConfigs.ambassadorMetrics?.todayTarget ?? 0} 
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value) || 0;
-                              setHomepageConfigs({
-                                ...homepageConfigs,
-                                ambassadorMetrics: { 
-                                  ...homepageConfigs.ambassadorMetrics, 
-                                  todayTarget: val,
-                                  monthlyTarget: val * 30
-                                }
-                              });
-                            }}
-                            required 
-                            min="0"
-                          />
+
+                  <div className="target-card-body">
+                    <form onSubmit={handleSaveAmbassadorMetrics}>
+                      <div className="target-control-grid">
+                        {/* Control 1: Today's Target */}
+                        <div className="target-input-card">
+                          <div>
+                            <div className="target-card-label-wrap">
+                              <label className="target-card-label">
+                                <Target size={17} color="#0284c7" /> Today's Target (Accounts / Day) *
+                              </label>
+                            </div>
+                            <p className="target-card-desc">
+                              The daily registered student accounts expectation per ambassador.
+                            </p>
+
+                            <div className="target-field-wrapper">
+                              <span className="target-input-icon">🎯</span>
+                              <input 
+                                type="number" 
+                                className="target-number-input"
+                                value={homepageConfigs.ambassadorMetrics?.todayTarget ?? 0} 
+                                onChange={(e) => {
+                                  const val = Math.max(0, parseInt(e.target.value) || 0);
+                                  setHomepageConfigs({
+                                    ...homepageConfigs,
+                                    ambassadorMetrics: { 
+                                      ...homepageConfigs.ambassadorMetrics, 
+                                      todayTarget: val,
+                                      monthlyTarget: val * 30
+                                    }
+                                  });
+                                }}
+                                required 
+                                min="0"
+                                placeholder="e.g. 5"
+                              />
+                              <span className="target-unit-tag">Accounts / Day</span>
+                            </div>
+                          </div>
+
+                          <div className="target-presets-row">
+                            <span className="preset-pill-label">Presets:</span>
+                            {[3, 5, 8, 10, 15, 20, 25, 30, 40, 50].map((presetVal) => (
+                              <button
+                                key={presetVal}
+                                type="button"
+                                className="metric-preset-btn"
+                                style={{
+                                  background: homepageConfigs.ambassadorMetrics?.todayTarget === presetVal ? '#0284c7' : '#ffffff',
+                                  color: homepageConfigs.ambassadorMetrics?.todayTarget === presetVal ? '#ffffff' : '#334155',
+                                  borderColor: homepageConfigs.ambassadorMetrics?.todayTarget === presetVal ? '#0284c7' : '#e2e8f0'
+                                }}
+                                onClick={() => {
+                                  setHomepageConfigs({
+                                    ...homepageConfigs,
+                                    ambassadorMetrics: { 
+                                      ...homepageConfigs.ambassadorMetrics, 
+                                      todayTarget: presetVal,
+                                      monthlyTarget: presetVal * 30
+                                    }
+                                  });
+                                }}
+                              >
+                                {presetVal}/day
+                              </button>
+                            ))}
+                          </div>
                         </div>
 
-                        <div className="form-group" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                          <label style={{ color: '#0284c7', fontWeight: '700' }}>Monthly Target (Auto-Calculated)</label>
-                          <div style={{
-                            background: '#f0f9ff',
-                            border: '1px solid #bae6fd',
-                            borderRadius: '8px',
-                            padding: '0.65rem 1rem',
-                            fontWeight: '800',
-                            fontSize: '1.1rem',
-                            color: '#0369a1',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between'
-                          }}>
-                            <span>{((homepageConfigs.ambassadorMetrics?.todayTarget || 0) * 30)} accounts / month</span>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '600', background: '#e0f2fe', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                              30 Days × {homepageConfigs.ambassadorMetrics?.todayTarget || 0}/day
-                            </span>
+                        {/* Control 2: Monthly Target (Auto-Calculated) */}
+                        <div className="target-input-card auto-calc-card">
+                          <div>
+                            <div className="target-card-label-wrap">
+                              <span className="target-card-label" style={{ color: '#0369a1' }}>
+                                <TrendingUp size={17} color="#0284c7" /> Monthly Target (Auto-Calculated)
+                              </span>
+                              <span className="auto-calc-badge">30-Day Automated</span>
+                            </div>
+                            <p className="target-card-desc" style={{ color: '#0284c7' }}>
+                              Calculated based on daily goal × 30 days. Synced to Ambassador Monthly Performance.
+                            </p>
+
+                            <div className="auto-calc-display-box">
+                              <div className="auto-calc-val">
+                                {((homepageConfigs.ambassadorMetrics?.todayTarget || 0) * 30)}{' '}
+                                <small>accounts / month</small>
+                              </div>
+                              <span style={{
+                                fontSize: '0.8rem',
+                                fontWeight: '750',
+                                background: '#e0f2fe',
+                                color: '#0369a1',
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '8px',
+                                border: '1px solid #bae6fd'
+                              }}>
+                                30 Days × {homepageConfigs.ambassadorMetrics?.todayTarget || 0}/day
+                              </span>
+                            </div>
+                          </div>
+
+                          <div style={{ fontSize: '0.8rem', color: '#0369a1', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}>
+                            <CheckCircle2 size={14} color="#0284c7" />
+                            <span>Target adjusts automatically when you update Daily Target</span>
+                          </div>
+                        </div>
+
+                        {/* Control 3: Incentive per Account */}
+                        <div className="target-input-card highlight-card">
+                          <div>
+                            <div className="target-card-label-wrap">
+                              <label className="target-card-label" style={{ color: '#065f46' }}>
+                                <Award size={17} color="#059669" /> Incentive Rate per Account (৳) *
+                              </label>
+                            </div>
+                            <p className="target-card-desc" style={{ color: '#047857' }}>
+                              Financial bounty awarded to ambassadors upon each approved candidate account.
+                            </p>
+
+                            <div className="target-field-wrapper">
+                              <span className="target-input-icon" style={{ color: '#059669', fontSize: '1.25rem', fontWeight: '900' }}>৳</span>
+                              <input 
+                                type="number" 
+                                className="target-number-input"
+                                style={{ borderColor: '#6ee7b7' }}
+                                value={homepageConfigs.ambassadorMetrics?.incentivePerQAA ?? 0} 
+                                onChange={(e) => {
+                                  const val = Math.max(0, parseInt(e.target.value) || 0);
+                                  setHomepageConfigs({
+                                    ...homepageConfigs,
+                                    ambassadorMetrics: { 
+                                      ...homepageConfigs.ambassadorMetrics, 
+                                      incentivePerQAA: val 
+                                    }
+                                  });
+                                }}
+                                required 
+                                min="0"
+                                placeholder="e.g. 40"
+                              />
+                              <span className="target-unit-tag" style={{ background: '#d1fae5', color: '#065f46' }}>৳ BDT / Account</span>
+                            </div>
+                          </div>
+
+                          <div className="target-presets-row">
+                            <span className="preset-pill-label" style={{ color: '#047857' }}>Presets:</span>
+                            {[30, 40, 50, 75, 100].map((rateVal) => (
+                              <button
+                                key={rateVal}
+                                type="button"
+                                className="metric-preset-btn"
+                                style={{
+                                  background: homepageConfigs.ambassadorMetrics?.incentivePerQAA === rateVal ? '#059669' : '#ffffff',
+                                  color: homepageConfigs.ambassadorMetrics?.incentivePerQAA === rateVal ? '#ffffff' : '#065f46',
+                                  borderColor: '#a7f3d0'
+                                }}
+                                onClick={() => {
+                                  setHomepageConfigs({
+                                    ...homepageConfigs,
+                                    ambassadorMetrics: { 
+                                      ...homepageConfigs.ambassadorMetrics, 
+                                      incentivePerQAA: rateVal 
+                                    }
+                                  });
+                                }}
+                              >
+                                ৳{rateVal}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       </div>
 
-                      <div className="form-group" style={{ marginBottom: '1.5rem', maxWidth: '400px' }}>
-                        <label>Incentive per Account (৳) *</label>
-                        <input 
-                          type="number" 
-                          value={homepageConfigs.ambassadorMetrics?.incentivePerQAA ?? 0} 
-                          onChange={(e) => setHomepageConfigs({
-                            ...homepageConfigs,
-                            ambassadorMetrics: { ...homepageConfigs.ambassadorMetrics, incentivePerQAA: parseInt(e.target.value) || 0 }
-                          })}
-                          required 
-                          min="0"
-                          placeholder="e.g. 50"
-                        />
-                      </div>
+                      {/* Footer Actions */}
+                      <div className="controller-footer-actions">
+                        <div className="live-sync-indicator">
+                          <span className="pulse-green-dot"></span>
+                          <span>Configuration changes update all active ambassador portals immediately.</span>
+                        </div>
 
-                      <button type="submit" className="btn btn-primary" style={{ borderRadius: '8px', padding: '0.65rem 1.75rem', fontWeight: '750' }}>
-                        Save & Publish Ambassador Settings
-                      </button>
+                        <button 
+                          type="submit" 
+                          className="controller-save-btn"
+                        >
+                          <CheckCircle2 size={18} />
+                          <span>Save & Publish Ambassador Settings</span>
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>
+              </div>
+            ) : activeTab === 'ambassadorassessment' ? (
+              /* AMBASSADOR ASSESSMENT & WORK PERFORMANCE MATRIX */
+              <div className="saas-table-card">
+                {/* 1. TOP METRICS KPI SUMMARY TILES */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+                  gap: '1.25rem',
+                  padding: '1.5rem',
+                  borderBottom: '1px solid var(--saas-border)'
+                }}>
+                  {/* Metric 1: Total Registered Ambassadors */}
+                  <div style={{
+                    background: 'rgba(2, 132, 199, 0.06)',
+                    border: '1px solid rgba(2, 132, 199, 0.18)',
+                    borderRadius: '14px',
+                    padding: '1.25rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#0284c7', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.04em' }}>
+                        Approved Ambassadors
+                      </span>
+                      <Users size={18} color="#0284c7" />
+                    </div>
+                    <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#0284c7', lineHeight: '1.1' }}>
+                      {assessmentAmbassadors.length}
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                      {assessmentAmbassadors.filter(a => a.totalAccounts > 0).length} active contributors with accounts
+                    </span>
+                  </div>
+
+                  {/* Metric 2: Total Candidate Accounts Created */}
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.06)',
+                    border: '1px solid rgba(16, 185, 129, 0.18)',
+                    borderRadius: '14px',
+                    padding: '1.25rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#10b981', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.04em' }}>
+                        Total Accounts Created
+                      </span>
+                      <GraduationCap size={18} color="#10b981" />
+                    </div>
+                    <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#10b981', lineHeight: '1.1' }}>
+                      {assessmentAmbassadors.reduce((acc, a) => acc + a.totalAccounts, 0)}
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#059669', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                      {assessmentAmbassadors.reduce((acc, a) => acc + a.approvedAccounts, 0)} approved ({allWorkReports.length > 0 ? Math.round((assessmentAmbassadors.reduce((acc, a) => acc + a.approvedAccounts, 0) / allWorkReports.length) * 100) : 0}% success rate)
+                    </span>
+                  </div>
+
+                  {/* Metric 3: Average Goal Progress % */}
+                  <div style={{
+                    background: 'rgba(99, 102, 241, 0.06)',
+                    border: '1px solid rgba(99, 102, 241, 0.18)',
+                    borderRadius: '14px',
+                    padding: '1.25rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#6366f1', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.04em' }}>
+                        Avg. Monthly Goal Progress
+                      </span>
+                      <Target size={18} color="#6366f1" />
+                    </div>
+                    <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#6366f1', lineHeight: '1.1' }}>
+                      {assessmentAmbassadors.length > 0 ? Math.round(assessmentAmbassadors.reduce((acc, a) => acc + a.progressPercent, 0) / assessmentAmbassadors.length) : 0}%
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      Target: {homepageConfigs.ambassadorMetrics?.monthlyTarget || ((homepageConfigs.ambassadorMetrics?.todayTarget || 5) * 30)} accounts / month
+                    </span>
+                  </div>
+
+                  {/* Metric 4: Approved Bounty Accrued */}
+                  <div style={{
+                    background: 'rgba(139, 92, 246, 0.06)',
+                    border: '1px solid rgba(139, 92, 246, 0.18)',
+                    borderRadius: '14px',
+                    padding: '1.25rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#8b5cf6', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.04em' }}>
+                        Total Bounty Accrued
+                      </span>
+                      <Award size={18} color="#8b5cf6" />
+                    </div>
+                    <div style={{ fontSize: '2.4rem', fontWeight: '900', color: '#8b5cf6', lineHeight: '1.1' }}>
+                      ৳{assessmentAmbassadors.reduce((acc, a) => acc + a.earnedBounty, 0).toLocaleString()}
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                      @ ৳{homepageConfigs.ambassadorMetrics?.incentivePerQAA || 40} / approved candidate
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. SECTION HEADER & TOOLBAR */}
+                <div style={{
+                  padding: '1.5rem',
+                  borderBottom: '1px solid var(--saas-border)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                        Ambassador Assessment & Work Performance ({assessmentAmbassadors.length})
+                      </h3>
+                      <span style={{
+                        fontSize: '0.82rem',
+                        fontWeight: '750',
+                        color: '#0284c7',
+                        background: '#e0f2fe',
+                        padding: '0.2rem 0.65rem',
+                        borderRadius: '20px',
+                        border: '1px solid #bae6fd'
+                      }}>
+                        {filteredAssessmentAmbassadors.length} showing
+                      </span>
+                    </div>
+                    <p style={{ margin: '0.35rem 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                      Audit only approved ambassadors verified by Super Admin, their student submissions, and conversion performance in exact numbers and percentages.
+                    </p>
+                  </div>
+
+                  {/* Filter & Sort Controls */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {/* Search Input */}
+                    <div className="saas-toolbar-search" style={{ minWidth: '280px', maxWidth: '340px', position: 'relative' }}>
+                      <Search className="saas-search-icon" size={16} />
+                      <input 
+                        type="text" 
+                        className="saas-search-input" 
+                        placeholder="Search ambassador by name, email, phone..." 
+                        value={assessmentSearch}
+                        onChange={(e) => setAssessmentSearch(e.target.value)}
+                        style={{ paddingRight: assessmentSearch ? '2.4rem' : '1rem' }}
+                      />
+                      {assessmentSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setAssessmentSearch('')}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            color: '#94a3b8',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '4px'
+                          }}
+                          title="Clear search"
+                        >
+                          <X size={15} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Performance Tier Filter */}
+                    <select
+                      value={assessmentFilter}
+                      onChange={(e) => setAssessmentFilter(e.target.value)}
+                      style={{
+                        padding: '0.62rem 1rem',
+                        borderRadius: '10px',
+                        border: '1.5px solid #cbd5e1',
+                        background: '#ffffff',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        color: '#334155',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="all">All Performers ({assessmentAmbassadors.length})</option>
+                      <option value="high">🌟 Elite (≥80% Goal)</option>
+                      <option value="medium">⚡ On Track (50-79% Goal)</option>
+                      <option value="low">🌱 Needs Push (&lt;50% Goal)</option>
+                      <option value="zero">⏳ Zero Accounts</option>
+                    </select>
+
+                    {/* Sort Selector */}
+                    <select
+                      value={assessmentSort}
+                      onChange={(e) => setAssessmentSort(e.target.value)}
+                      style={{
+                        padding: '0.62rem 1rem',
+                        borderRadius: '10px',
+                        border: '1.5px solid #cbd5e1',
+                        background: '#ffffff',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        color: '#334155',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="progress">Sort by: Goal % (Highest)</option>
+                      <option value="approved">Sort by: Approved Accounts</option>
+                      <option value="total">Sort by: Total Created</option>
+                      <option value="name">Sort by: Name (A-Z)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 3. AMBASSADOR ASSESSMENT TABLE */}
+                {assessmentAmbassadors.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '4rem 1.5rem', color: '#64748b' }}>
+                    <BarChart3 size={44} style={{ color: '#cbd5e1', marginBottom: '0.75rem' }} />
+                    <h4 style={{ margin: '0 0 0.35rem', color: '#334155', fontWeight: '750' }}>No Ambassador Accounts Found</h4>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                      When candidate applicants are approved or register ambassador accounts, their assessment metrics will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="table-container" style={{ margin: '1.5rem', overflowX: 'auto' }}>
+                    <table className="admin-table" style={{ width: '100%', minWidth: '1050px' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ width: '50px', padding: '1rem 1.25rem' }}>#</th>
+                          <th style={{ minWidth: '220px', padding: '1rem 1.25rem' }}>Ambassador Profile</th>
+                          <th style={{ minWidth: '150px', padding: '1rem 1.25rem' }}>Phone Number</th>
+                          <th style={{ minWidth: '200px', padding: '1rem 1.25rem' }}>Accounts Created (Number)</th>
+                          <th style={{ minWidth: '220px', padding: '1rem 1.25rem' }}>Monthly Goal Progress (% & Number)</th>
+                          <th style={{ minWidth: '170px', padding: '1rem 1.25rem' }}>Approval Rate (% & Number)</th>
+                          <th style={{ minWidth: '140px', padding: '1rem 1.25rem' }}>Earned Bounty</th>
+                          <th style={{ minWidth: '140px', padding: '1rem 1.25rem', textAlign: 'center' }}>Performance Tier</th>
+                          <th style={{ minWidth: '130px', padding: '1rem 1.25rem', textAlign: 'center' }}>Audit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAssessmentAmbassadors.length === 0 ? (
+                          <tr>
+                            <td colSpan="9" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: '#64748b' }}>
+                              <Search size={36} style={{ color: '#cbd5e1', marginBottom: '0.75rem', display: 'inline-block' }} />
+                              <h4 style={{ margin: '0 0 0.35rem', color: '#334155', fontWeight: '750' }}>No matching ambassadors</h4>
+                              <p style={{ margin: '0 0 1rem', fontSize: '0.9rem' }}>
+                                No ambassador records matched your search or tier filter.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAssessmentSearch('');
+                                  setAssessmentFilter('all');
+                                }}
+                                style={{
+                                  padding: '0.5rem 1.25rem',
+                                  background: '#0284c7',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  color: '#ffffff',
+                                  fontWeight: '700',
+                                  fontSize: '0.85rem',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Reset Filter & Search
+                              </button>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredAssessmentAmbassadors.map((amb, idx) => {
+                            const progressColor = amb.progressPercent >= 80 ? '#10b981' : amb.progressPercent >= 50 ? '#0284c7' : amb.totalAccounts > 0 ? '#f59e0b' : '#94a3b8';
+
+                            return (
+                              <tr key={amb.id || amb.email || idx}>
+                                <td style={{ color: '#94a3b8', fontWeight: '700', padding: '1.1rem 1.25rem' }}>
+                                  {idx + 1}
+                                </td>
+
+                                {/* Ambassador Profile */}
+                                <td style={{ padding: '1.1rem 1.25rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{
+                                      width: '38px',
+                                      height: '38px',
+                                      borderRadius: '10px',
+                                      background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
+                                      color: '#0284c7',
+                                      fontSize: '0.95rem',
+                                      fontWeight: '800',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      flexShrink: 0,
+                                      border: '1px solid #7dd3fc'
+                                    }}>
+                                      {(amb.name || 'A')[0].toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.95rem' }}>
+                                        {amb.name}
+                                      </div>
+                                      <div style={{ color: '#0284c7', fontSize: '0.82rem', fontWeight: '500' }}>
+                                        {amb.email}
+                                      </div>
+                                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: '#475569', fontSize: '0.78rem', marginTop: '0.2rem' }}>
+                                        <School size={12} color="#94a3b8" />
+                                        <span>{amb.university || 'Campus Member'}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Phone Number */}
+                                <td style={{ padding: '1.1rem 1.25rem' }}>
+                                  {amb.phone ? (
+                                    <a
+                                      href={`tel:${amb.phone}`}
+                                      style={{
+                                        color: '#0284c7',
+                                        fontWeight: '600',
+                                        fontSize: '0.88rem',
+                                        textDecoration: 'none',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.4rem',
+                                        background: 'rgba(2, 132, 199, 0.08)',
+                                        padding: '0.3rem 0.65rem',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(2, 132, 199, 0.2)'
+                                      }}
+                                    >
+                                      <Phone size={12} color="#0284c7" />
+                                      <span>{amb.phone}</span>
+                                    </a>
+                                  ) : (
+                                    <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>—</span>
+                                  )}
+                                </td>
+
+                                {/* Accounts Created in Numbers */}
+                                <td style={{ padding: '1.1rem 1.25rem' }}>
+                                  <div>
+                                    <div style={{ fontSize: '1.15rem', fontWeight: '900', color: '#0f172a', marginBottom: '0.35rem' }}>
+                                      {amb.totalAccounts}{' '}
+                                      <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#64748b' }}>
+                                        {amb.totalAccounts === 1 ? 'account' : 'accounts'}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                      <span style={{
+                                        fontSize: '0.74rem',
+                                        fontWeight: '750',
+                                        background: '#dcfce7',
+                                        color: '#15803d',
+                                        padding: '0.15rem 0.45rem',
+                                        borderRadius: '6px'
+                                      }}>
+                                        ✓ {amb.approvedAccounts} Approved
+                                      </span>
+                                      <span style={{
+                                        fontSize: '0.74rem',
+                                        fontWeight: '750',
+                                        background: '#fef3c7',
+                                        color: '#b45309',
+                                        padding: '0.15rem 0.45rem',
+                                        borderRadius: '6px'
+                                      }}>
+                                        🕒 {amb.pendingAccounts} Pending
+                                      </span>
+                                      {amb.rejectedAccounts > 0 && (
+                                        <span style={{
+                                          fontSize: '0.74rem',
+                                          fontWeight: '750',
+                                          background: '#fee2e2',
+                                          color: '#b91c1c',
+                                          padding: '0.15rem 0.45rem',
+                                          borderRadius: '6px'
+                                        }}>
+                                          ✕ {amb.rejectedAccounts}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Monthly Goal Progress in % and Number */}
+                                <td style={{ padding: '1.1rem 1.25rem' }}>
+                                  <div style={{ minWidth: '180px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                                      <span style={{
+                                        fontSize: '1.05rem',
+                                        fontWeight: '900',
+                                        color: progressColor
+                                      }}>
+                                        {amb.progressPercent}%
+                                      </span>
+                                      <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '700' }}>
+                                        {amb.approvedAccounts} / {amb.monthlyTarget} goal
+                                      </span>
+                                    </div>
+
+                                    {/* Progress Track */}
+                                    <div style={{
+                                      width: '100%',
+                                      height: '8px',
+                                      background: '#f1f5f9',
+                                      borderRadius: '10px',
+                                      overflow: 'hidden',
+                                      border: '1px solid #e2e8f0'
+                                    }}>
+                                      <div style={{
+                                        width: `${Math.min(100, amb.progressPercent)}%`,
+                                        height: '100%',
+                                        background: progressColor,
+                                        borderRadius: '10px',
+                                        transition: 'width 0.4s ease'
+                                      }} />
+                                    </div>
+
+                                    <div style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#64748b' }}>
+                                      {amb.todayAccounts > 0 ? (
+                                        <span style={{ color: '#059669', fontWeight: '700' }}>
+                                          ⚡ +{amb.todayAccounts} created today
+                                        </span>
+                                      ) : (
+                                        <span>No submissions today</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Approval Rate in % and Number */}
+                                <td style={{ padding: '1.1rem 1.25rem' }}>
+                                  <div>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a' }}>
+                                      {amb.successRate}%
+                                    </div>
+                                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', marginTop: '0.15rem' }}>
+                                      {amb.approvedAccounts} of {amb.totalAccounts} approved
+                                    </div>
+                                    <div style={{ marginTop: '0.3rem' }}>
+                                      <span style={{
+                                        fontSize: '0.72rem',
+                                        fontWeight: '750',
+                                        background: amb.successRate >= 75 ? 'rgba(16, 185, 129, 0.1)' : amb.successRate >= 50 ? 'rgba(2, 132, 199, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                        color: amb.successRate >= 75 ? '#059669' : amb.successRate >= 50 ? '#0284c7' : '#b45309',
+                                        padding: '0.15rem 0.5rem',
+                                        borderRadius: '4px'
+                                      }}>
+                                        {amb.successRate >= 75 ? 'High Quality' : amb.successRate >= 50 ? 'Moderate' : amb.totalAccounts === 0 ? 'No Data' : 'Review Needed'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Earned Bounty */}
+                                <td style={{ padding: '1.1rem 1.25rem' }}>
+                                  <div>
+                                    <div style={{ fontSize: '1.15rem', fontWeight: '900', color: '#7c3aed' }}>
+                                      ৳{amb.earnedBounty.toLocaleString()}
+                                    </div>
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>
+                                      @ ৳{homepageConfigs.ambassadorMetrics?.incentivePerQAA || 40} / acc
+                                    </span>
+                                  </div>
+                                </td>
+
+                                {/* Performance Tier Badge */}
+                                <td style={{ padding: '1.1rem 1.25rem', textAlign: 'center' }}>
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '0.35rem 0.75rem',
+                                    borderRadius: '20px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: '800',
+                                    background: amb.tier === 'Elite' ? 'rgba(16, 185, 129, 0.12)' : amb.tier === 'On Track' ? 'rgba(2, 132, 199, 0.12)' : amb.tier === 'Needs Push' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(148, 163, 184, 0.15)',
+                                    color: amb.tier === 'Elite' ? '#059669' : amb.tier === 'On Track' ? '#0284c7' : amb.tier === 'Needs Push' ? '#b45309' : '#64748b',
+                                    border: `1px solid ${amb.tier === 'Elite' ? 'rgba(16, 185, 129, 0.3)' : amb.tier === 'On Track' ? 'rgba(2, 132, 199, 0.3)' : amb.tier === 'Needs Push' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`
+                                  }}>
+                                    {amb.tier === 'Elite' && '🌟 Elite'}
+                                    {amb.tier === 'On Track' && '⚡ On Track'}
+                                    {amb.tier === 'Needs Push' && '🌱 Needs Push'}
+                                    {amb.tier === 'Inactive' && '⏳ Inactive'}
+                                  </span>
+                                </td>
+
+                                {/* Audit / Action */}
+                                <td style={{ padding: '1.1rem 1.25rem', textAlign: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedAssessmentAmbassador(amb)}
+                                    title="View full candidate submission logs"
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.35rem',
+                                      padding: '0.45rem 0.85rem',
+                                      background: '#f8fafc',
+                                      border: '1.5px solid #cbd5e1',
+                                      borderRadius: '8px',
+                                      color: '#0284c7',
+                                      fontSize: '0.82rem',
+                                      fontWeight: '750',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background = '#0284c7';
+                                      e.currentTarget.style.color = '#ffffff';
+                                      e.currentTarget.style.borderColor = '#0284c7';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = '#f8fafc';
+                                      e.currentTarget.style.color = '#0284c7';
+                                      e.currentTarget.style.borderColor = '#cbd5e1';
+                                    }}
+                                  >
+                                    <Eye size={13} />
+                                    <span>Details</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             ) : activeTab === 'ambassadors' ? (
               /* AMBASSADOR APPLICATIONS SUB-TAB */
@@ -2828,19 +3953,25 @@ const Admin = () => {
                         <th>Candidate</th>
                         <th>University / Institution</th>
                         <th>Applied On</th>
-                        <th>Status Status</th>
-                        <th>Actions Actions</th>
+                        <th>Status</th>
+                        <th>Specify for Assessment</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredAmbassadors.map((app) => (
-                        <tr key={app._id}>
+                        <tr key={app._id || app.id}>
                           <td>
                             <div className="applicant-identity">
                               <h5>{app.name}</h5>
                               <p style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                                 <Mail size={12} /> {app.email}
                               </p>
+                              {app.phone && (
+                                <p style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
+                                  <Phone size={11} /> {app.phone}
+                                </p>
+                              )}
                             </div>
                           </td>
                           <td>
@@ -2856,12 +3987,37 @@ const Admin = () => {
                             <select 
                               className={`status-select ${app.status}`}
                               value={app.status}
-                              onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                              onChange={(e) => handleStatusChange(app._id || app.id, e.target.value)}
                             >
                               <option value="Pending">🕒 Pending</option>
                               <option value="Approved">✅ Approved</option>
                               <option value="Rejected">❌ Rejected</option>
                             </select>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAssessmentEligible(app._id || app.id, !app.isAssessmentEligible)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '0.38rem 0.8rem',
+                                borderRadius: '9999px',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                border: '1px solid',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                background: app.isAssessmentEligible ? 'rgba(16, 185, 129, 0.12)' : '#f8fafc',
+                                color: app.isAssessmentEligible ? '#059669' : '#64748b',
+                                borderColor: app.isAssessmentEligible ? 'rgba(16, 185, 129, 0.35)' : '#cbd5e1'
+                              }}
+                              title={app.isAssessmentEligible ? "Click to remove from Assessment section" : "Click to include in Assessment section"}
+                            >
+                              <Target size={13} style={{ color: app.isAssessmentEligible ? '#059669' : '#94a3b8' }} />
+                              {app.isAssessmentEligible ? '🎯 Enrolled for Assessment' : '+ Specify for Assessment'}
+                            </button>
                           </td>
                           <td>
                             <div className="action-buttons">
@@ -2871,7 +4027,7 @@ const Admin = () => {
                               <button className="btn-icon view" style={{ color: 'var(--primary)', background: 'rgba(2, 132, 199, 0.1)', border: '1px solid rgba(2, 132, 199, 0.15)' }} title="Read Cover Application" onClick={() => handleViewApplication(app)}>
                                 <Eye size={16} />
                               </button>
-                              <button className="btn-icon delete" title="Delete Record" onClick={() => handleDeleteAmbassador(app._id)}>
+                              <button className="btn-icon delete" title="Delete Record" onClick={() => handleDeleteAmbassador(app._id || app.id)}>
                                 <Trash2 size={16} />
                               </button>
                             </div>
@@ -7398,15 +8554,39 @@ const Admin = () => {
           <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
             <motion.div 
               className="modal-card"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              style={{ maxWidth: '540px' }}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
-                <h3>{currentUser ? 'Edit User Account' : 'Add New User Account'}</h3>
-                <button className="close-btn" onClick={() => setShowUserModal(false)}>&times;</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    background: 'rgba(2, 132, 199, 0.12)',
+                    color: '#0284c7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 6px rgba(2, 132, 199, 0.1)'
+                  }}>
+                    {currentUser ? <Edit2 size={18} /> : <UserPlus size={18} />}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem' }}>{currentUser ? 'Edit User Account' : 'Add New User Account'}</h3>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      {currentUser ? 'Update user credentials & system access' : 'Create new member credentials and grant portal role'}
+                    </span>
+                  </div>
+                </div>
+                <button className="modal-close-btn" onClick={() => setShowUserModal(false)} title="Close">
+                  <X size={18} />
+                </button>
               </div>
+
               <div className="modal-body">
                 <form onSubmit={handleUserFormSubmit} className="admin-form">
                   <div className="form-group">
@@ -7420,7 +8600,7 @@ const Admin = () => {
                     />
                   </div>
 
-                  <div className="form-group" style={{ marginTop: '1rem' }}>
+                  <div className="form-group">
                     <label>Email Address</label>
                     <input 
                       type="email" 
@@ -7431,7 +8611,7 @@ const Admin = () => {
                     />
                   </div>
 
-                  <div className="grid-2" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr 1fr', marginTop: '1rem' }}>
+                  <div className="grid-2">
                     <div className="form-group">
                       <label>Account Role</label>
                       <select 
@@ -7458,12 +8638,20 @@ const Admin = () => {
                     </div>
                   </div>
 
-                  <div className="form-actions" style={{ marginTop: '1.75rem' }}>
-                    <button type="button" className="btn btn-secondary" style={{ borderRadius: '8px', padding: '0.6rem 1.5rem' }} onClick={() => setShowUserModal(false)}>
+                  <div className="form-actions">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowUserModal(false)}>
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary" style={{ borderRadius: '8px', padding: '0.6rem 1.5rem' }}>
-                      {currentUser ? 'Save Changes' : 'Create User Account'}
+                    <button type="submit" className="btn btn-primary">
+                      {currentUser ? (
+                        <>
+                          <Check size={16} /> Save Changes
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus size={16} /> Create User Account
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -7756,31 +8944,54 @@ const Admin = () => {
 
         {/* 3. Ambassador Manual Creator Form Modal */}
         {showAmbassadorModal && (
-          <div className="modal-overlay">
+          <div className="modal-overlay" onClick={() => setShowAmbassadorModal(false)}>
             <motion.div 
               className="modal-card"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              style={{ maxWidth: '640px' }}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
-                <h3>Add Ambassador Manually</h3>
-                <button className="close-btn" onClick={() => setShowAmbassadorModal(false)}>&times;</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    background: 'rgba(2, 132, 199, 0.12)',
+                    color: '#0284c7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 6px rgba(2, 132, 199, 0.1)'
+                  }}>
+                    <Award size={18} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem' }}>Add Ambassador Manually</h3>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Directly enroll candidate without applicant submission</span>
+                  </div>
+                </div>
+                <button className="modal-close-btn" onClick={() => setShowAmbassadorModal(false)} title="Close">
+                  <X size={18} />
+                </button>
               </div>
+
               <div className="modal-body">
                 <form onSubmit={handleAmbassadorSubmit} className="admin-form">
-                  <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                  <div className="form-group">
                     <label>Profile Picture</label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {ambassadorForm.image && (
-                        <div style={{ position: 'relative', width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #cbd5e1', margin: '0 auto' }}>
+                        <div style={{ position: 'relative', width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #e0f2fe', margin: '0 auto', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
                           <img src={ambassadorForm.image} alt="Preview Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           <button 
                             type="button" 
-                            style={{ position: 'absolute', top: '0.2rem', right: '0.2rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+                            style={{ position: 'absolute', top: '0.2rem', right: '0.2rem', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.85rem', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
                             onClick={() => setAmbassadorForm({ ...ambassadorForm, image: '' })}
                           >
-                            &times;
+                            <X size={13} />
                           </button>
                         </div>
                       )}
@@ -7788,8 +8999,8 @@ const Admin = () => {
                       <div 
                         style={{ 
                           border: '2px dashed #cbd5e1', 
-                          borderRadius: '10px', 
-                          padding: '1.2rem', 
+                          borderRadius: '12px', 
+                          padding: '1.25rem', 
                           textAlign: 'center', 
                           background: '#f8fafc',
                           cursor: 'pointer',
@@ -7797,6 +9008,8 @@ const Admin = () => {
                           transition: 'all 0.2s ease',
                           display: ambassadorForm.image ? 'none' : 'block'
                         }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#0284c7'; e.currentTarget.style.background = '#f0f9ff'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}
                         onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         onDrop={(e) => {
                           e.preventDefault();
@@ -7815,62 +9028,69 @@ const Admin = () => {
                             if (file) handleAmbassadorImageFile(file);
                           }}
                         />
-                        <div style={{ color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
-                          <Plus size={20} style={{ color: 'var(--accent)' }} />
-                          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '500' }}>
-                            <span style={{ color: 'var(--accent)', fontWeight: '600' }}>Upload Profile Pic</span> or drag-drop
+                        <div style={{ color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
+                          <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <UploadCloud size={20} />
+                          </div>
+                          <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: '600', color: '#1e293b' }}>
+                            <span style={{ color: '#0284c7' }}>Upload Profile Pic</span> or drag and drop
                           </p>
-                          <p style={{ margin: 0, fontSize: '0.75rem' }}>PNG, JPG or WEBP up to 2MB</p>
+                          <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>PNG, JPG or WEBP up to 2MB</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>Full Name</label>
-                    <input 
-                      type="text" 
-                      name="name" 
-                      value={ambassadorForm.name} 
-                      onChange={(e) => setAmbassadorForm({ ...ambassadorForm, name: e.target.value })} 
-                      placeholder="e.g. John Doe"
-                      required 
-                    />
+                  <div className="grid-2">
+                    <div className="form-group">
+                      <label>Full Name</label>
+                      <input 
+                        type="text" 
+                        name="name" 
+                        value={ambassadorForm.name} 
+                        onChange={(e) => setAmbassadorForm({ ...ambassadorForm, name: e.target.value })} 
+                        placeholder="e.g. John Doe"
+                        required 
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Email Address</label>
+                      <input 
+                        type="email" 
+                        name="email" 
+                        value={ambassadorForm.email} 
+                        onChange={(e) => setAmbassadorForm({ ...ambassadorForm, email: e.target.value })} 
+                        placeholder="john@example.com"
+                        required 
+                      />
+                    </div>
                   </div>
-                  <div className="form-group" style={{ marginTop: '1rem' }}>
-                    <label>Email Address</label>
-                    <input 
-                      type="email" 
-                      name="email" 
-                      value={ambassadorForm.email} 
-                      onChange={(e) => setAmbassadorForm({ ...ambassadorForm, email: e.target.value })} 
-                      placeholder="john@example.com"
-                      required 
-                    />
-                  </div>
-                  <div className="form-group" style={{ marginTop: '1rem' }}>
-                    <label>Phone Number</label>
-                    <input 
-                      type="tel" 
-                      name="phone" 
-                      value={ambassadorForm.phone} 
-                      onChange={(e) => setAmbassadorForm({ ...ambassadorForm, phone: e.target.value })} 
-                      placeholder="e.g. +8801..."
-                    />
-                  </div>
-                  <div className="form-group" style={{ marginTop: '1rem' }}>
-                    <label>University / Institution</label>
-                    <input 
-                      type="text" 
-                      name="university" 
-                      value={ambassadorForm.university} 
-                      onChange={(e) => setAmbassadorForm({ ...ambassadorForm, university: e.target.value })} 
-                      placeholder="e.g. Dhaka University"
-                      required 
-                    />
+
+                  <div className="grid-2">
+                    <div className="form-group">
+                      <label>Phone Number</label>
+                      <input 
+                        type="tel" 
+                        name="phone" 
+                        value={ambassadorForm.phone} 
+                        onChange={(e) => setAmbassadorForm({ ...ambassadorForm, phone: e.target.value })} 
+                        placeholder="e.g. +8801..."
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>University / Institution</label>
+                      <input 
+                        type="text" 
+                        name="university" 
+                        value={ambassadorForm.university} 
+                        onChange={(e) => setAmbassadorForm({ ...ambassadorForm, university: e.target.value })} 
+                        placeholder="e.g. Dhaka University"
+                        required 
+                      />
+                    </div>
                   </div>
                   
-                  <div className="grid-2" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr 1fr', marginTop: '1rem' }}>
+                  <div className="grid-2">
                     <div className="form-group">
                       <label>Role / Designation</label>
                       <input 
@@ -7893,21 +9113,20 @@ const Admin = () => {
                     </div>
                   </div>
 
-                  <div className="grid-2" style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr 1fr', marginTop: '1rem' }}>
-                    <div className="form-group">
-                      <label>Status Decision</label>
-                      <select 
-                        name="status" 
-                        value={ambassadorForm.status} 
-                        onChange={(e) => setAmbassadorForm({ ...ambassadorForm, status: e.target.value })}
-                      >
-                        <option value="Approved">Approved</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                    </div>
+                  <div className="form-group">
+                    <label>Status Decision</label>
+                    <select 
+                      name="status" 
+                      value={ambassadorForm.status} 
+                      onChange={(e) => setAmbassadorForm({ ...ambassadorForm, status: e.target.value })}
+                    >
+                      <option value="Approved">✅ Approved</option>
+                      <option value="Pending">🕒 Pending</option>
+                      <option value="Rejected">❌ Rejected</option>
+                    </select>
                   </div>
-                  <div className="form-group" style={{ marginTop: '1rem' }}>
+
+                  <div className="form-group">
                     <label>Reason / Admin Note</label>
                     <textarea 
                       rows="3" 
@@ -7918,12 +9137,13 @@ const Admin = () => {
                       required
                     ></textarea>
                   </div>
-                  <div className="form-actions" style={{ marginTop: '1.5rem' }}>
-                    <button type="button" className="btn btn-secondary" style={{ borderRadius: '8px', padding: '0.6rem 1.5rem' }} onClick={() => setShowAmbassadorModal(false)}>
+
+                  <div className="form-actions">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowAmbassadorModal(false)}>
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary" style={{ borderRadius: '8px', padding: '0.6rem 1.5rem' }}>
-                      Add Ambassador
+                    <button type="submit" className="btn btn-primary">
+                      <Award size={16} /> Add Ambassador
                     </button>
                   </div>
                 </form>
@@ -8030,6 +9250,20 @@ const Admin = () => {
                   <div className="form-group">
                     <label>Department</label>
                     <input type="text" value={editingAmbassadorData.dept} onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, dept: e.target.value})} />
+                  </div>
+                  <div className="form-group" style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '10px', border: '1px solid #e2e8f0', marginTop: '0.35rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', margin: 0, fontWeight: '700', color: '#1e293b' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={editingAmbassadorData.isAssessmentEligible || false} 
+                        onChange={(e) => setEditingAmbassadorData({...editingAmbassadorData, isAssessmentEligible: e.target.checked})}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#0284c7' }}
+                      />
+                      <span>Specify for Ambassador Assessment</span>
+                    </label>
+                    <p style={{ margin: '0.35rem 0 0 1.75rem', fontSize: '0.78rem', color: '#64748b' }}>
+                      When enabled, this ambassador will be tracked in the Ambassador Assessment performance matrix.
+                    </p>
                   </div>
                 </div>
                 <div className="modal-footer" style={{ padding: '1.5rem', borderTop: '1px solid rgba(15,23,42,0.08)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
@@ -9077,6 +10311,159 @@ const Admin = () => {
                     Done
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+        {/* AMBASSADOR ASSESSMENT BREAKDOWN MODAL */}
+        {selectedAssessmentAmbassador && (
+          <div className="modal-overlay" onClick={() => setSelectedAssessmentAmbassador(null)}>
+            <motion.div 
+              className="modal-card"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: '850px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}
+            >
+              <div className="modal-header" style={{ background: 'linear-gradient(to right, rgba(2, 132, 199, 0.08), transparent)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '800',
+                    fontSize: '1.1rem'
+                  }}>
+                    {(selectedAssessmentAmbassador.name || 'A')[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>
+                      {selectedAssessmentAmbassador.name}
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#64748b', fontSize: '0.82rem', marginTop: '0.15rem' }}>
+                      <span>{selectedAssessmentAmbassador.email}</span>
+                      {selectedAssessmentAmbassador.phone && (
+                        <>
+                          <span>•</span>
+                          <span>{selectedAssessmentAmbassador.phone}</span>
+                        </>
+                      )}
+                      <span>•</span>
+                      <span>{selectedAssessmentAmbassador.university}</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="btn-icon close" onClick={() => setSelectedAssessmentAmbassador(null)}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="modal-body" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {/* Scorecard KPI Tiles */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '750', color: '#64748b', textTransform: 'uppercase' }}>Total Created</span>
+                    <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#0f172a', marginTop: '0.2rem' }}>
+                      {selectedAssessmentAmbassador.totalAccounts}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>candidate accounts</span>
+                  </div>
+
+                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '1rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '750', color: '#16a34a', textTransform: 'uppercase' }}>Approved Accounts</span>
+                    <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#15803d', marginTop: '0.2rem' }}>
+                      {selectedAssessmentAmbassador.approvedAccounts}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: '700' }}>
+                      {selectedAssessmentAmbassador.successRate}% quality rate
+                    </span>
+                  </div>
+
+                  <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '12px', padding: '1rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '750', color: '#0284c7', textTransform: 'uppercase' }}>Monthly Goal Progress</span>
+                    <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#0369a1', marginTop: '0.2rem' }}>
+                      {selectedAssessmentAmbassador.progressPercent}%
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#0284c7', fontWeight: '700' }}>
+                      {selectedAssessmentAmbassador.approvedAccounts} / {selectedAssessmentAmbassador.monthlyTarget} accounts
+                    </span>
+                  </div>
+
+                  <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '12px', padding: '1rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '750', color: '#9333ea', textTransform: 'uppercase' }}>Accrued Bounty</span>
+                    <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#7e22ce', marginTop: '0.2rem' }}>
+                      ৳{selectedAssessmentAmbassador.earnedBounty.toLocaleString()}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#9333ea' }}>Earned balance</span>
+                  </div>
+                </div>
+
+                {/* Candidate Submissions Audit Log */}
+                <div>
+                  <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', fontWeight: '800', color: '#1e293b' }}>
+                    Candidate Accounts Logged by {selectedAssessmentAmbassador.name} ({selectedAssessmentAmbassador.reports.length})
+                  </h4>
+
+                  {selectedAssessmentAmbassador.reports.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2.5rem', background: '#f8fafc', borderRadius: '12px', color: '#64748b' }}>
+                      <p style={{ margin: 0, fontSize: '0.9rem' }}>This ambassador has not submitted any candidate work reports yet.</p>
+                    </div>
+                  ) : (
+                    <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+                      <table className="admin-table" style={{ width: '100%', margin: 0 }}>
+                        <thead>
+                          <tr>
+                            <th style={{ width: '40px' }}>#</th>
+                            <th>Candidate Name</th>
+                            <th>Phone Number</th>
+                            <th>Date</th>
+                            <th style={{ textAlign: 'center' }}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedAssessmentAmbassador.reports.map((r, rIdx) => (
+                            <tr key={r._id || r.id || rIdx}>
+                              <td style={{ color: '#94a3b8', fontWeight: '700' }}>{rIdx + 1}</td>
+                              <td style={{ fontWeight: '700', color: '#0f172a' }}>{r.name}</td>
+                              <td style={{ color: '#475569', fontWeight: '600' }}>{r.phone}</td>
+                              <td style={{ color: '#64748b', fontSize: '0.85rem' }}>{formatDate(r.createdAt)}</td>
+                              <td style={{ textAlign: 'center' }}>
+                                <span style={{
+                                  display: 'inline-block',
+                                  padding: '0.25rem 0.65rem',
+                                  borderRadius: '20px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '800',
+                                  background: (r.status === 'Approved' || r.status === 'Accepted') ? '#dcfce7' : r.status === 'Rejected' ? '#fee2e2' : '#fef3c7',
+                                  color: (r.status === 'Approved' || r.status === 'Accepted') ? '#15803d' : r.status === 'Rejected' ? '#b91c1c' : '#b45309'
+                                }}>
+                                  {(r.status === 'Approved' || r.status === 'Accepted') ? '✓ Approved' : r.status === 'Rejected' ? '✕ Rejected' : '🕒 Pending'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedAssessmentAmbassador(null)}
+                  style={{ borderRadius: '8px', padding: '0.6rem 1.5rem' }}
+                >
+                  Close Assessment
+                </button>
               </div>
             </motion.div>
           </div>

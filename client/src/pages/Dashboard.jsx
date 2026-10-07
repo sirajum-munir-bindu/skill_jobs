@@ -292,7 +292,8 @@ const Dashboard = () => {
   const todayAchieved = todayCreatedCount;
   const todayTarget = metrics.todayTarget || 0;
 
-  const monthlyAchieved = totalCreatedCount;
+  // Monthly performance achieved represents the count of approved accounts
+  const monthlyAchieved = approvedCount;
   const monthlyTarget = metrics.monthlyTarget || (todayTarget * 30);
 
   const remainingAccounts = Math.max(0, monthlyTarget - monthlyAchieved);

@@ -120,7 +120,7 @@ class UserListCreateView(APIView):
         perm_list = data.get('permissions')
         if perm_list is None:
             perm_list = [
-                "users", "ambassadors", "ambassadortasks", "ambassadordashboard",
+                "users", "ambassadors", "ambassadortasks", "ambassadordashboard", "ambassadorassessment",
                 "homepage", "aboutpage", "ambassadorpage", "contactpage", "contactmessages"
             ]
 
